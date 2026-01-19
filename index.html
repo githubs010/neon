@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neon Strategy: Omega Edition</title>
+    <title>Neon Strategy: Deadlock Breaker</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     
     <style>
@@ -31,7 +31,6 @@
         }
 
         /* --- RESPONSIVE LAYOUT --- */
-        /* MOBILE (Default) */
         .main-layout {
             display: flex;
             flex-direction: column;
@@ -53,29 +52,15 @@
             flex-grow: 1; z-index: 10;
         }
 
-        /* DESKTOP (Landscape) */
+        /* Landscape Mode */
         @media (min-width: 800px) and (orientation: landscape) {
-            .main-layout {
-                flex-direction: row; justify-content: center; gap: 40px;
-            }
-            .game-area {
-                width: 80vh; height: 80vh;
-                max-width: 800px; max-height: 800px;
-                border: 2px solid #333; border-radius: 12px;
-                background: #000;
-            }
-            .hud-area {
-                width: 320px; height: 80vh;
-                border-top: none; border-left: 2px solid #333;
-                border-radius: 12px; flex-grow: 0;
-                background: rgba(0,0,0,0.6);
-            }
+            .main-layout { flex-direction: row; gap: 40px; }
+            .game-area { width: 80vh; height: 80vh; max-width: 800px; border: 2px solid #333; border-radius: 12px; background: #000; }
+            .hud-area { width: 320px; height: 80vh; border-top: none; border-left: 2px solid #333; border-radius: 12px; flex-grow: 0; background: rgba(0,0,0,0.6); }
         }
 
-        /* --- GAME ELEMENTS --- */
+        /* --- GAME VISUALS --- */
         canvas { width: 100%; height: 100%; border-radius: 8px; display: block; }
-        .targeting { cursor: crosshair; }
-
         .status-title { font-family: 'Orbitron'; font-size: 1.8rem; font-weight: bold; margin-bottom: 5px; text-align: center; }
         .status-sub { font-size: 1rem; opacity: 0.7; text-align: center; margin-bottom: 20px; }
         
@@ -104,17 +89,13 @@
             backdrop-filter: blur(8px);
         }
         
-        h1 { font-family: 'Orbitron'; font-size: 2.5rem; text-align: center; margin-bottom: 40px; text-shadow: 0 0 20px rgba(255,255,255,0.3); }
-
         .menu-btn {
             width: 280px; padding: 15px; margin: 10px;
             background: transparent; border: 2px solid var(--p1-color); color: var(--p1-color);
             font-family: 'Orbitron'; font-size: 1.1rem; cursor: pointer; text-align: center;
             box-shadow: 0 0 15px var(--p1-glow);
         }
-        .menu-btn:hover { background: var(--p1-color); color: #000; }
         .menu-btn.hard { border-color: var(--p2-color); color: var(--p2-color); box-shadow: 0 0 15px var(--p2-glow); }
-        .menu-btn.hard:hover { background: var(--p2-color); color: #000; }
 
         /* COIN FLIP UI */
         .coin {
@@ -135,58 +116,52 @@
 <body>
 
     <div id="main-menu" class="overlay">
-        <h1>NEON STRATEGY<br><span style="font-size:1rem; letter-spacing:5px; opacity:0.7">OMEGA EDITION</span></h1>
+        <h1 style="font-family:'Orbitron'; font-size:2.5rem; text-align:center;">NEON STRATEGY<br><span style="font-size:1rem; letter-spacing:4px; opacity:0.8; color:#aaa;">DEADLOCK EDITION</span></h1>
         <button class="menu-btn" onclick="startGame('PVP')">PLAYER vs PLAYER</button>
         <button class="menu-btn hard" onclick="startGame('PVC_HARD')">VS CPU (GRANDMASTER)</button>
-        <button class="menu-btn" onclick="startGame('PVC_EASY')" style="border-color:#fff; color:#fff; box-shadow:none; font-size:0.9rem;">VS CPU (EASY)</button>
+        <button class="menu-btn" onclick="startGame('PVC_EASY')" style="border-color:#fff; color:#fff; box-shadow:none;">VS CPU (EASY)</button>
     </div>
 
     <div id="coin-overlay" class="overlay" style="display:none;">
         <div id="coin-visual" class="coin" onclick="startFlip()">FLIP</div>
-        <div id="coin-msg" style="text-align:center; font-family:'Orbitron'; font-size:1.3rem;">TRAPPED!<br><span style="font-size:0.9rem; color:#888">Flip to Shoot an Enemy</span></div>
+        <div id="coin-msg" style="text-align:center; font-family:'Orbitron'; font-size:1.3rem;">NO MOVES POSSIBLE!<br><span style="font-size:0.9rem; color:#888">Flip to Shoot an Enemy</span></div>
     </div>
 
     <div class="main-layout">
-        
         <div class="game-area">
             <canvas id="gameBoard"></canvas>
         </div>
-
         <div class="hud-area">
             <div class="score-board">
                 <div class="score-p1">P1: <span id="s1">12</span></div>
                 <div class="score-p2">OPP: <span id="s2">12</span></div>
             </div>
-
             <div class="status-box">
                 <div id="status-t" class="status-title p1-turn">YOUR TURN</div>
                 <div id="status-sub" class="status-sub">Place Unit</div>
             </div>
-
             <button class="btn" onclick="location.reload()">MAIN MENU</button>
         </div>
     </div>
 
 <script>
-/** * NEON STRATEGY OMEGA ENGINE 
- * Features: Minimax AI, Responsive UI, Trap Coin-Flip Mechanic
- */
+/** * NEON STRATEGY: DEADLOCK EDITION * */
 
 // --- CONFIG ---
 const P1_COLOR = '#00f2ff';
 const P2_COLOR = '#ff0055';
-const MAX_DEPTH = 4; // AI Depth
+const MAX_DEPTH = 4; // AI Intelligence Level
 
 // --- STATE ---
 let mode = 'PVC_HARD';
 let turn = 1; 
 let phase = 'PLACING'; // PLACING, MOVING, REMOVING, TRAPPED, GAME_OVER
 let board = [];
-let p1Left=12, p2Left=12;
-let p1Board=0, p2Board=0;
+let p1Left=12, p2Left=12; // Units to place
+let p1Board=0, p2Board=0; // Units on board
 let selectedId = -1;
 
-// Board Geometry
+// Board Layout (24 Points)
 const rawPoints = [
     {x:0.1,y:0.1},{x:0.5,y:0.1},{x:0.9,y:0.1}, {x:0.9,y:0.5},{x:0.9,y:0.9},{x:0.5,y:0.9}, {x:0.1,y:0.9},{x:0.1,y:0.5},
     {x:0.25,y:0.25},{x:0.5,y:0.25},{x:0.75,y:0.25}, {x:0.75,y:0.5},{x:0.75,y:0.75},{x:0.5,y:0.75}, {x:0.25,y:0.75},{x:0.25,y:0.5},
@@ -210,7 +185,7 @@ function startGame(m) {
     resize(); updateUI();
 }
 
-// --- INPUT HANDLING ---
+// --- CORE INPUT LOGIC ---
 function handleClick(idx) {
     if(mode.includes('PVC') && turn===2) return; // Wait for AI
     if(phase==='TRAPPED' || phase==='GAME_OVER') return;
@@ -228,7 +203,7 @@ function handleClick(idx) {
     else if(phase==='REMOVING') {
         const enemy = turn===1?2:1;
         if(board[idx].owner===enemy) {
-            if(isProtected(idx, enemy)) { alert("Protected Unit!"); return; }
+            if(isProtected(idx, enemy)) { alert("This unit is protected by a line!"); return; }
             kill(idx, enemy);
         }
     }
@@ -239,10 +214,11 @@ function move(to, ply, type, from) {
     if(type==='PLACE') { if(ply===1)p1Left--; else p2Left--; if(ply===1)p1Board++; else p2Board++; }
     if(type==='MOVE') { board[from].owner=0; selectedId=-1; }
 
+    // Check for Mill (3 in a row)
     if(checkMill(to, ply)) {
         phase='REMOVING';
         if(mode.includes('PVC') && ply===2) setTimeout(aiKill, 800);
-        else updateUI(true, "TARGET LOCKED", "Shoot an Enemy");
+        else updateUI(true, "TARGET LOCKED", "Select enemy to destroy");
     } else {
         endTurn();
     }
@@ -252,35 +228,43 @@ function kill(idx, owner) {
     board[idx].owner = 0;
     if(owner===2) p2Board--; else p1Board--;
     
-    // Check Win by Count
+    // Win Condition
     if(p1Left===0 && p2Left===0) {
         if(p2Board<3) { gameOver(1); return; }
         if(p1Board<3) { gameOver(2); return; }
     }
     
+    // Resume Game
     phase = (p1Left>0||p2Left>0)?'PLACING':'MOVING';
     endTurn();
 }
 
 function endTurn() {
     if(phase==='GAME_OVER') return;
+    
+    // Switch Turn
     turn = (turn===1)?2:1;
     
-    // TRAP CHECK: If current player has 0 moves
-    if(phase==='MOVING' && countMoves(turn)===0) {
-        phase='TRAPPED'; 
-        showCoinFlip(turn); 
-        return;
+    // --- DEADLOCK TRAP DETECTION ---
+    // If it's the Moving phase and the current player has 0 moves
+    if(phase==='MOVING') {
+        const validMoves = getValidMoves(turn);
+        if(validMoves.length === 0) {
+            phase = 'TRAPPED';
+            showCoinFlip(turn);
+            return; // Stop game loop until flip is done
+        }
     }
 
     updateUI();
     
+    // Trigger AI
     if(mode.includes('PVC') && turn===2) {
         setTimeout(aiMove, 600);
     }
 }
 
-// --- COIN FLIP MECHANIC ---
+// --- COIN FLIP TRAP MECHANIC ---
 function showCoinFlip(who) {
     const ov = document.getElementById('coin-overlay');
     const msg = document.getElementById('coin-msg');
@@ -289,13 +273,14 @@ function showCoinFlip(who) {
     ov.style.display = 'flex';
     coin.className = 'coin'; coin.innerText = "FLIP";
     
-    // AI Trapped Logic
+    // If AI is trapped
     if(mode.includes('PVC') && who===2) {
-        msg.innerHTML = "CPU TRAPPED<br>CPU is flipping...";
+        msg.innerHTML = "CPU HAS NO MOVES!<br>CPU is flipping to survive...";
         coin.onclick = null;
         setTimeout(flip, 1500);
     } else {
-        msg.innerHTML = "YOU ARE TRAPPED!<br>Flip to Shoot";
+        // Player trapped
+        msg.innerHTML = "YOU HAVE NO MOVES!<br>Flip to Shoot and clear space";
         coin.onclick = flip;
     }
 }
@@ -307,6 +292,7 @@ function flip() {
     coin.className = 'coin flip'; coin.innerText = "";
     
     setTimeout(()=>{
+        // 50/50 Chance
         let win = Math.random()>0.5;
         
         coin.className = 'coin'; 
@@ -315,19 +301,21 @@ function flip() {
         coin.innerText = win?"WIN":"LOSE";
         
         if(win) {
-            msg.innerHTML = "SUCCESS!<br><span style='color:#0f0'>Targeting System Active</span>";
+            msg.innerHTML = "SUCCESS!<br><span style='color:#0f0'>Destroy an enemy to free yourself!</span>";
             setTimeout(()=>{
                 document.getElementById('coin-overlay').style.display='none';
                 phase='REMOVING';
                 
-                if(turn===2 && mode.includes('PVC')) aiKill(); // AI won flip
-                else updateUI(true, "TARGET LOCKED", "Shoot an Enemy!"); // Player won flip
+                // If AI won logic
+                if(turn===2 && mode.includes('PVC')) aiKill(); 
+                else updateUI(true, "TARGET LOCKED", "Shoot an Enemy!"); 
                 
             }, 1500);
         } else {
-            msg.innerHTML = "FAILURE<br><span style='color:#f00'>Self Destruct</span>";
+            msg.innerHTML = "FAILURE<br><span style='color:#f00'>Self Destruct Sequence...</span>";
             setTimeout(()=>{
-                gameOver(turn===1?2:1); // Opponent wins
+                // Opponent wins
+                gameOver(turn===1?2:1); 
             }, 1500);
         }
     }, 1500);
@@ -337,31 +325,25 @@ function flip() {
 function aiMove() {
     if(phase==='TRAPPED') return;
 
-    // Easy AI (Random)
+    // Easy: Random
     if(mode==='PVC_EASY') {
         let moves = getValidMoves(2);
-        if(moves.length===0) return; // Should be handled by trap check
+        if(moves.length===0) return; // Handled by trap check
         let m = moves[Math.floor(Math.random()*moves.length)];
         move(m.to, 2, m.type, m.from);
         return;
     }
 
-    // Hard AI (Minimax)
+    // Hard: Minimax
+    let moves = getValidMoves(2);
     let bestScore = -Infinity;
     let bestMove = null;
-    let moves = getValidMoves(2);
 
     for(let m of moves) {
-        // Sim
         let prev = board[m.to].owner;
-        board[m.to].owner=2; 
-        if(m.type==='MOVE') board[m.from].owner=0;
-
+        board[m.to].owner=2; if(m.type==='MOVE') board[m.from].owner=0;
         let score = minimax(MAX_DEPTH - 1, false, -Infinity, Infinity);
-        
-        // Undo
-        board[m.to].owner=prev; 
-        if(m.type==='MOVE') board[m.from].owner=2;
+        board[m.to].owner=prev; if(m.type==='MOVE') board[m.from].owner=2;
 
         if(score > bestScore) { bestScore = score; bestMove = m; }
     }
@@ -371,11 +353,10 @@ function aiMove() {
 
 function minimax(depth, isMax, alpha, beta) {
     if(depth===0) return evaluate();
-    
     let ply = isMax ? 2 : 1;
     let moves = getValidMoves(ply);
     
-    if(moves.length===0) return isMax ? -5000 : 5000; // Penalize Trap heavily
+    if(moves.length===0) return isMax ? -5000 : 5000; // Penalize Trap
 
     if(isMax) {
         let maxEval = -Infinity;
@@ -413,12 +394,13 @@ function evaluate() {
 }
 
 function aiKill() {
-    // Kill best unprotected unit (prioritize blocking)
     let targets = board.filter(p=>p.owner===1 && !isProtected(p.id, 1));
     if(targets.length > 0) {
+        // Prioritize killing pieces that block mills
         targets.sort((a,b) => countAdj(b.id,1) - countAdj(a.id,1));
         kill(targets[0].id, 1);
     } else {
+        // If all protected, must skip kill (game rules vary, this prevents stuck state)
         phase=(p1Left>0||p2Left>0)?'PLACING':'MOVING'; endTurn();
     }
 }
@@ -442,6 +424,7 @@ function checkMill(idx, ply) {
 function isProtected(idx, ply) {
     if(!checkMill(idx, ply)) return false;
     let all = board.filter(p=>p.owner===ply);
+    // If ALL pieces are in mills, nothing is protected
     return !all.every(p=>checkMill(p.id, ply));
 }
 function countMills(ply) {
@@ -498,7 +481,7 @@ function draw() {
             ctx.fillStyle=col; ctx.shadowBlur=15; ctx.shadowColor=col;
             ctx.beginPath(); ctx.arc(x,y,bs*0.035,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
             
-            // Highlight Targetable
+            // Highlight Targetable in Remove Phase
             if(phase==='REMOVING' && turn===1 && p.owner===2 && !isProtected(p.id,2)) {
                 ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(x,y,bs*0.05,0,Math.PI*2); ctx.stroke();
             }
