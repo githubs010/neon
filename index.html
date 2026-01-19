@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neon Strategy: Sudden Death</title>
+    <title>Neon Strategy: Ultimate</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     
     <style>
@@ -27,6 +27,38 @@
             overflow: hidden;
             user-select: none;
         }
+
+        /* --- MAIN MENU --- */
+        #main-menu {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #050510;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s;
+        }
+        
+        h1 { font-family: 'Orbitron'; font-size: 2.5rem; color: #fff; text-shadow: 0 0 20px rgba(255,255,255,0.5); margin-bottom: 40px; text-align: center; }
+
+        .menu-btn {
+            background: transparent;
+            border: 2px solid var(--p1-color);
+            color: var(--p1-color);
+            padding: 15px 40px;
+            margin: 10px;
+            font-family: 'Orbitron';
+            font-size: 1.2rem;
+            cursor: pointer;
+            width: 250px;
+            text-align: center;
+            transition: 0.3s;
+            box-shadow: 0 0 15px var(--p1-glow);
+        }
+        .menu-btn:hover { background: var(--p1-color); color: #000; }
+        .menu-btn.secondary { border-color: var(--p2-color); color: var(--p2-color); box-shadow: 0 0 15px var(--p2-glow); }
+        .menu-btn.secondary:hover { background: var(--p2-color); color: #000; }
 
         /* --- FLIP & TARGET POPUP --- */
         #action-overlay {
@@ -54,7 +86,6 @@
 
         .coin.flip { animation: spinCoin 0.5s infinite linear; }
         @keyframes spinCoin { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(360deg); } }
-
         .coin.win { border-color: #0f0; color: #0f0; box-shadow: 0 0 50px #0f0; background: #002200; }
         .coin.lose { border-color: #f00; color: #f00; box-shadow: 0 0 50px #f00; background: #220000; }
 
@@ -76,7 +107,6 @@
             box-shadow: 0 0 30px rgba(0,0,0,0.5);
         }
 
-        /* --- TARGET CURSOR --- */
         .targeting { cursor: crosshair !important; }
 
         /* --- HUD --- */
@@ -101,6 +131,12 @@
 </head>
 <body>
 
+    <div id="main-menu">
+        <h1>NEON STRATEGY</h1>
+        <button class="menu-btn" onclick="startGame('PVP')">PLAYER vs PLAYER</button>
+        <button class="menu-btn secondary" onclick="startGame('PVC')">PLAYER vs CPU</button>
+    </div>
+
     <div id="action-overlay">
         <div id="coin-visual" class="coin" onclick="startFlip()">FLIP</div>
         <div id="overlay-text" class="msg-box">TRAPPED!<br><span style="font-size:1rem; color:#aaa">Tap Coin to break free</span></div>
@@ -113,7 +149,7 @@
     <div class="hud">
         <div id="status" class="status p1-turn">YOUR TURN</div>
         <div id="sub-status" class="sub-status">Place your unit</div>
-        <button onclick="location.reload()" style="margin-top:15px; background:none; border:1px solid #555; color:#aaa; padding:8px 20px;">RESTART</button>
+        <button onclick="location.reload()" style="margin-top:15px; background:none; border:1px solid #555; color:#aaa; padding:8px 20px;">MAIN MENU</button>
     </div>
 
 <script>
@@ -122,8 +158,9 @@ const P1_COLOR = '#00f2ff';
 const P2_COLOR = '#ff0055';
 
 // --- GAME STATE ---
-let turn = 1; // 1 = You, 2 = AI
-let phase = 'PLACING'; // PLACING, MOVING, REMOVING, TRAPPED
+let gameMode = 'PVC'; // 'PVP' or 'PVC'
+let turn = 1; // 1 = P1, 2 = P2/AI
+let phase = 'PLACING'; // PLACING, MOVING, REMOVING, TRAPPED, GAME_OVER
 let board = [];
 let p1Left = 12, p2Left = 12;
 let p1Board = 0, p2Board = 0;
@@ -146,34 +183,42 @@ const mills = [
     [0,8,16],[2,10,18],[4,12,20],[6,14,22]
 ];
 
+function startGame(mode) {
+    gameMode = mode;
+    document.getElementById('main-menu').style.display = 'none';
+    init();
+}
+
 function init() {
     board = rawPoints.map((p,i)=>({id:i, owner:0}));
+    turn = 1; phase = 'PLACING';
+    p1Left=12; p2Left=12; p1Board=0; p2Board=0;
+    selectedId=-1;
     resize(); updateUI();
 }
 
 // --- LOGIC ---
 function handleClick(idx) {
-    if(turn === 2 || phase === 'TRAPPED' || phase === 'GAME_OVER') return;
+    // If PvC, ignore clicks during AI turn
+    if(gameMode === 'PVC' && turn === 2) return;
+    if(phase === 'TRAPPED' || phase === 'GAME_OVER') return;
 
     if(phase === 'PLACING') {
         if(board[idx].owner !== 0) return;
-        move(idx, 1, 'PLACE');
+        move(idx, turn, 'PLACE');
     } 
     else if(phase === 'MOVING') {
-        if(board[idx].owner === 1) { selectedId = idx; updateUI(); }
+        if(board[idx].owner === turn) { selectedId = idx; updateUI(); }
         else if(selectedId !== -1 && board[idx].owner === 0 && adj[selectedId].includes(idx)) {
-            move(idx, 1, 'MOVE', selectedId);
+            move(idx, turn, 'MOVE', selectedId);
         }
     }
     else if(phase === 'REMOVING') {
-        // TARGETING LOGIC
-        if(board[idx].owner === 2) {
-            // Check protection
-            if(isProtected(idx, 2)) {
-                alert("Cannot target protected unit!"); 
-                return; 
-            }
-            kill(idx, 2);
+        const enemy = turn === 1 ? 2 : 1;
+        // Only target enemy
+        if(board[idx].owner === enemy) {
+            if(isProtected(idx, enemy)) { alert("Cannot target protected unit!"); return; }
+            kill(idx, enemy);
         }
     }
 }
@@ -185,8 +230,8 @@ function move(to, ply, type, from) {
 
     if(checkMill(to, ply)) {
         phase = 'REMOVING';
-        if(ply===1) updateUI(true, "TARGET LOCKED", "Tap RED unit to destroy");
-        else setTimeout(aiKill, 800);
+        if(gameMode === 'PVC' && ply === 2) setTimeout(aiKill, 800);
+        else updateUI(true, "TARGET LOCKED", "Tap enemy unit to destroy");
     } else {
         endTurn();
     }
@@ -218,7 +263,11 @@ function endTurn() {
     }
 
     updateUI();
-    if(turn === 2) setTimeout(aiTurn, 800);
+    
+    // Trigger AI if needed
+    if(gameMode === 'PVC' && turn === 2) {
+        setTimeout(aiTurn, 800);
+    }
 }
 
 // --- COIN FLIP POPUP ---
@@ -231,14 +280,23 @@ function showPopup(who) {
     coin.className = 'coin'; 
     coin.innerText = "FLIP";
     
-    if(who === 1) {
-        txt.innerHTML = "YOU ARE TRAPPED!<br><span style='font-size:1rem; color:#aaa'>Flip to break the lock</span>";
-        coin.onclick = startFlip; // Enable click
+    let canInteract = true;
+
+    // Logic: In PvC, AI (P2) is automated. In PvP, humans click for themselves.
+    if(gameMode === 'PVC' && who === 2) {
+        // AI Trapped
+        txt.innerHTML = "CPU TRAPPED!<br><span style='font-size:1rem; color:#aaa'>CPU is attempting override...</span>";
+        canInteract = false;
+        setTimeout(startFlip, 1500);
     } else {
-        txt.innerHTML = "AI IS TRAPPED!<br><span style='font-size:1rem; color:#aaa'>AI is flipping...</span>";
-        coin.onclick = null; // Disable click
-        setTimeout(startFlip, 1000);
+        // Human Trapped (P1 or P2 in PvP)
+        const pName = (who === 1) ? "PLAYER 1" : "PLAYER 2";
+        const col = (who === 1) ? P1_COLOR : P2_COLOR;
+        txt.innerHTML = `<span style="color:${col}">${pName} TRAPPED!</span><br><span style='font-size:1rem; color:#aaa'>Flip to break the lock</span>`;
     }
+
+    if(canInteract) coin.onclick = startFlip;
+    else coin.onclick = null;
 }
 
 function startFlip() {
@@ -260,8 +318,11 @@ function startFlip() {
             setTimeout(() => {
                 document.getElementById('action-overlay').style.display = 'none';
                 phase = 'REMOVING';
-                if(player === 1) updateUI(true, "SELECT TARGET", "Tap any enemy unit");
-                else aiKill();
+                
+                // If AI won logic, trigger AI kill
+                if(gameMode === 'PVC' && player === 2) aiKill();
+                else updateUI(true, "SELECT TARGET", "Tap any enemy unit");
+
             }, 1500);
         } else {
             txt.innerHTML = "FAILURE<br><span style='font-size:1rem; color:#f00'>SYSTEM LOCKDOWN</span>";
@@ -270,11 +331,11 @@ function startFlip() {
     }, 1500);
 }
 
-// --- AI ---
+// --- AI (CPU) LOGIC ---
 function aiTurn() {
     if(phase === 'TRAPPED') return; 
 
-    // Simple AI
+    // Simple AI: Check moves
     let moves = [];
     if(phase==='PLACING') {
         board.forEach(p=>{if(p.owner===0)moves.push({to:p.id})});
@@ -286,7 +347,7 @@ function aiTurn() {
     
     if(moves.length > 0) {
         // Try to find a mill
-        let best = moves[0];
+        let best = moves[Math.floor(Math.random() * moves.length)]; // Default random
         for(let m of moves) {
             let prev = board[m.to].owner;
             board[m.to].owner = 2; // Sim
@@ -302,7 +363,7 @@ function aiKill() {
     // AI kills random unprotected
     let targets = board.filter(p=>p.owner===1 && !isProtected(p.id, 1));
     if(targets.length > 0) kill(targets[0].id, 1);
-    else { phase='MOVING'; endTurn(); } // Can't kill
+    else { phase='MOVING'; endTurn(); } 
 }
 
 // --- HELPERS ---
@@ -325,7 +386,8 @@ function countMoves(ply) {
 function gameOver(winner) {
     document.getElementById('action-overlay').style.display='none';
     phase = 'GAME_OVER';
-    updateUI(true, winner===1?"YOU WON!":"GAME OVER", "Refresh to play again");
+    let wName = (winner===1) ? "PLAYER 1" : (gameMode==='PVC'?"CPU":"PLAYER 2");
+    updateUI(true, wName + " WINS!", "Opponent Eliminated");
 }
 
 // --- RENDER ---
@@ -362,8 +424,11 @@ function draw() {
             ctx.beginPath(); ctx.arc(x,y,15,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
             
             // Highlight Targetable enemies in Kill Mode
-            if(phase === 'REMOVING' && p.owner !== turn && !isProtected(p.id, p.owner)) {
-                ctx.strokeStyle = '#fff'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(x,y,20,0,Math.PI*2); ctx.stroke();
+            if(phase === 'REMOVING') {
+                const enemy = turn === 1 ? 2 : 1;
+                if(p.owner === enemy && !isProtected(p.id, enemy)) {
+                    ctx.strokeStyle = '#fff'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(x,y,20,0,Math.PI*2); ctx.stroke();
+                }
             }
             // Selection Ring
             if(p.id===selectedId) {
@@ -382,7 +447,8 @@ function updateUI(alert, t, sub) {
         s.innerText = t; ss.innerText = sub;
         s.className = alert ? "status kill-mode" : (turn===1?"status p1-turn":"status p2-turn");
     } else {
-        s.innerText = turn===1 ? "YOUR TURN" : "AI TURN";
+        let pName = (turn===1) ? "PLAYER 1" : (gameMode==='PVC'?"CPU":"PLAYER 2");
+        s.innerText = pName + " TURN";
         s.className = turn===1 ? "status p1-turn" : "status p2-turn";
         ss.innerText = phase==='PLACING' ? "Place Unit" : "Move Unit";
     }
@@ -405,8 +471,6 @@ function input(cx, cy) {
         if(Math.hypot(x-px, y-py) < 30) { handleClick(i); break; }
     }
 }
-
-init();
 </script>
 </body>
 </html>
