@@ -176,7 +176,11 @@
             </div>
             <div class="rules-step">
                 <strong>THE KILL</strong><br>
-                Forming a <strong>MILL</strong> allows you to destroy one opponent unit. (Protected units in a Mill cannot be targeted unless no others exist).
+                Forming a <strong>MILL</strong> allows you to destroy one opponent unit.
+            </div>
+            <div class="rules-step">
+                <strong>FULL BOARD PROTOCOL</strong><br>
+                If the board fills up during deployment, a <strong>COIN FLIP</strong> decides who gets a free kill to start the movement phase.
             </div>
             <div class="rules-step">
                 <strong>VICTORY</strong><br>
@@ -206,8 +210,8 @@
             </div>
             
             <div class="score-row">
-                <div class="p1-txt">P1: <span id="s1">12</span></div>
-                <div class="p2-txt">OPP: <span id="s2">12</span></div>
+                <div class="p1-txt">P1: <span id="s1">11</span></div>
+                <div class="p2-txt">OPP: <span id="s2">11</span></div>
             </div>
 
             <div class="btn-grid">
@@ -221,7 +225,7 @@
     </div>
 
 <script>
-/** NEON STRATEGY CRYSTAL ENGINE (COMPLEX AI UPGRADE) **/
+/** NEON STRATEGY CRYSTAL ENGINE (FULL BOARD COIN UPDATE) **/
 
 const P1_COL = '#00f2ff';
 const P2_COL = '#ff0055';
@@ -272,10 +276,11 @@ const MILLS=[[0,1,2],[2,3,4],[4,5,6],[6,7,0],[8,9,10],[10,11,12],[12,13,14],[14,
 
 // --- STATE ---
 let mode='PVC', diff=5, turn=1, phase='PLACING';
-let board=[], p1Left=12, p2Left=12, p1Board=0, p2Board=0;
+let board=[], p1Left=11, p2Left=11, p1Board=0, p2Board=0;
 let selectedId=-1, validMoves=[], historyStack=[], hintMove=null;
 let lastMove = {from:-1, to:-1};
 let timerInt=null, seconds=0;
+let flipContext = null;
 
 function startGame(m) {
     mode=m; diff=parseInt(document.getElementById('cpu-slider').value);
@@ -285,9 +290,9 @@ function startGame(m) {
 
 function resetGame() {
     board=RAW_PTS.map((p,i)=>({id:i, owner:0}));
-    turn=1; phase='PLACING'; p1Left=12; p2Left=12; p1Board=0; p2Board=0;
+    turn=1; phase='PLACING'; p1Left=11; p2Left=11; p1Board=0; p2Board=0;
     selectedId=-1; validMoves=[]; historyStack=[]; hintMove=null; seconds=0;
-    lastMove = {from:-1, to:-1}; particles=[];
+    lastMove = {from:-1, to:-1}; particles=[]; flipContext=null;
     document.getElementById('coin-overlay').style.display='none';
     clearInterval(timerInt); timerInt=setInterval(()=>{ seconds++; let m=Math.floor(seconds/60), s=seconds%60; document.getElementById('game-timer').innerText=`${m}:${s<10?'0':''}${s}`; },1000);
     
@@ -372,6 +377,11 @@ function move(to, ply, type, from) {
         if(mode!=='PVP' && ply===2) setTimeout(aiKill, 800);
         else updateUI(true, "TARGET LOCKED", "Destroy Enemy");
     } else {
+        // FULL BOARD COIN FLIP TRIGGER
+        if(phase === 'PLACING' && p1Left === 0 && p2Left === 0) {
+            showCoinFlip(ply, 'FULL_BOARD');
+            return;
+        }
         endTurn();
     }
 }
@@ -400,7 +410,7 @@ function endTurn() {
     if(phase==='MOVING') {
         let moves = getAllMoves(turn);
         if(moves.length === 0) {
-            phase='TRAPPED'; showCoinFlip(turn); return;
+            phase='TRAPPED'; showCoinFlip(turn, 'TRAPPED'); return;
         }
     }
 
@@ -409,7 +419,8 @@ function endTurn() {
 }
 
 // --- COIN FLIP ---
-function showCoinFlip(who) {
+function showCoinFlip(who, ctx) {
+    flipContext = ctx;
     const ov = document.getElementById('coin-overlay');
     const msg = document.getElementById('coin-msg');
     const coin = document.getElementById('coin-visual');
@@ -417,7 +428,13 @@ function showCoinFlip(who) {
     coin.className = 'coin'; coin.innerText = "FLIP";
     
     let pName = who===1?"P1":"CPU";
-    msg.innerHTML = `<span style="color:${who===1?P1_COL:P2_COL}">${pName} TRAPPED!</span><br>Flip to Kill`;
+    let col = who===1?P1_COL:P2_COL;
+
+    if(ctx === 'FULL_BOARD') {
+        msg.innerHTML = `<span style="color:${col}">BOARD FULL!</span><br>Flip to Kill & Clear Space`;
+    } else {
+        msg.innerHTML = `<span style="color:${col}">${pName} TRAPPED!</span><br>Flip to Kill`;
+    }
 
     if((mode==='PVC' && who===2)) { 
         coin.onclick=null; 
@@ -456,8 +473,17 @@ function flip() {
                 else updateUI(true, "TARGET LOCKED", "Shoot to Free Yourself!"); 
             }, 1500);
         } else {
-            msg.innerHTML = "LOSS<br><span style='color:#f00'>Self Destruct...</span>";
-            setTimeout(()=>{ gameOver(turn===1?2:1); }, 1500);
+            if(flipContext === 'FULL_BOARD') {
+                msg.innerHTML = "LOSS<br><span style='color:#f00'>No Kill Granted</span>";
+                setTimeout(()=>{ 
+                    document.getElementById('coin-overlay').style.display='none';
+                    phase='MOVING'; 
+                    endTurn(); 
+                }, 1500);
+            } else {
+                msg.innerHTML = "LOSS<br><span style='color:#f00'>Self Destruct...</span>";
+                setTimeout(()=>{ gameOver(turn===1?2:1); }, 1500);
+            }
         }
     }, 1000);
 }
