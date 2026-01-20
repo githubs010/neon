@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neon Strategy: Crystal</title>
+    <title>Neon Strategy: Crystal Hotfix</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     
     <style>
@@ -12,7 +12,7 @@
             --p1: #00f2ff; --p1-g: rgba(0, 242, 255, 0.6);
             --p2: #ff0055; --p2-g: rgba(255, 0, 85, 0.6);
             --hint: #a200ff; --hint-g: rgba(162, 0, 255, 0.6);
-            --panel: rgba(15, 15, 25, 0.9);
+            --panel: rgba(15, 20, 30, 0.95);
         }
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: none; }
         
@@ -35,35 +35,33 @@
         .game-area {
             width: 95vw; height: 95vw;
             max-width: 500px; max-height: 500px;
-            position: relative; margin-bottom: 10px;
-            box-shadow: 0 0 40px rgba(0,0,0,0.5);
+            position: relative; margin-bottom: 15px;
             border-radius: 12px;
-            background: #000; /* Ensure black bg so neon pops */
+            background: #000;
+            border: 2px solid #333;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
         }
         
         .hud-area {
-            width: 95%; max-width: 500px;
+            width: 95vw; max-width: 500px;
             background: var(--panel);
-            border: 1px solid #333; border-radius: 12px;
-            padding: 15px; display: flex; flex-direction: column;
-            gap: 10px; backdrop-filter: blur(10px);
+            border: 1px solid #444; border-radius: 12px;
+            padding: 20px; display: flex; flex-direction: column;
+            gap: 15px; backdrop-filter: blur(10px);
         }
 
         /* DESKTOP (Landscape) */
         @media (min-width: 900px) and (orientation: landscape) {
-            .main-layout { flex-direction: row; gap: 50px; }
+            .main-layout { flex-direction: row; gap: 60px; }
             
             .game-area {
-                width: 75vh; height: 75vh; /* Scale with height */
+                width: 80vh; height: 80vh;
                 max-width: 800px; max-height: 800px;
-                border: 3px solid #222;
             }
             
             .hud-area {
-                width: 320px; height: 75vh;
+                width: 320px; height: 80vh;
                 justify-content: center;
-                box-shadow: 0 0 30px rgba(0,0,0,0.5);
-                border: 2px solid #333;
             }
         }
 
@@ -72,39 +70,45 @@
         .targeting { cursor: crosshair !important; }
 
         /* --- UI COMPONENTS --- */
-        .status-box { text-align: center; margin-bottom: 10px; }
-        .status-t { font-family: 'Orbitron'; font-size: 1.8rem; font-weight: bold; margin: 0; }
-        .status-s { font-size: 1rem; opacity: 0.7; letter-spacing: 1px; }
-        .timer { font-family: 'Orbitron'; font-size: 1.2rem; color: #888; text-align: center; }
+        .status-box { text-align: center; margin-bottom: 5px; }
+        .status-t { font-family: 'Orbitron'; font-size: 1.8rem; font-weight: bold; margin: 0; letter-spacing: 1px; }
+        .status-s { font-size: 1rem; opacity: 0.7; letter-spacing: 1px; margin-top: 5px; }
+        .timer { font-family: 'Orbitron'; font-size: 1.2rem; color: #888; text-align: center; margin-bottom: 5px; }
 
         .p1-txt { color: var(--p1); text-shadow: 0 0 10px var(--p1-g); }
         .p2-txt { color: var(--p2); text-shadow: 0 0 10px var(--p2-g); }
         .alert { color: #ffe600; animation: pulse 0.5s infinite; }
         @keyframes pulse { 50% { opacity: 0.5; } }
 
-        .score-row { display: flex; justify-content: space-between; font-family: 'Orbitron'; font-size: 1.1rem; padding: 5px 10px; background: rgba(0,0,0,0.3); border-radius: 5px; }
+        .score-row { display: flex; justify-content: space-between; font-family: 'Orbitron'; font-size: 1.1rem; padding: 10px; background: rgba(0,0,0,0.4); border-radius: 6px; border: 1px solid #333; }
 
         /* BUTTONS */
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin-top: 5px; }
         .btn {
             background: rgba(255,255,255,0.05); border: 1px solid #444; color: #ccc;
-            padding: 12px; font-family: 'Orbitron'; font-size: 0.9rem;
+            padding: 14px; font-family: 'Orbitron'; font-size: 0.9rem;
             cursor: pointer; transition: 0.2s; border-radius: 4px;
         }
         .btn:hover { background: rgba(255,255,255,0.1); border-color: #fff; color: #fff; }
         .btn:active { transform: scale(0.95); }
-        .btn-hint { border-color: var(--hint); color: var(--hint); }
-        
+        .btn-hint { border-color: var(--hint); color: var(--hint); box-shadow: 0 0 10px rgba(162,0,255,0.2); }
         .full-btn { grid-column: span 2; }
+        
+        .icon-btn {
+            position: absolute; top: 15px; right: 15px; z-index: 100;
+            background: rgba(0,0,0,0.6); border: 1px solid #444; color: #fff;
+            width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+            display: flex; justify-content: center; align-items: center; font-size: 1.2rem;
+        }
 
-        /* --- MENUS & OVERLAYS --- */
+        /* --- MENUS --- */
         .overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.96); z-index: 200;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
         .menu-btn {
-            width: 280px; padding: 15px; margin: 8px;
+            width: 280px; padding: 16px; margin: 8px;
             background: transparent; border: 2px solid var(--p1); color: var(--p1);
             font-family: 'Orbitron'; font-size: 1.1rem; cursor: pointer;
             text-align: center; box-shadow: 0 0 15px var(--p1-g); transition: 0.2s;
@@ -113,9 +117,18 @@
         .menu-btn.cpu { border-color: #fff; color: #fff; box-shadow: none; }
         .menu-btn.cpu:hover { background: #fff; color: #000; }
 
-        /* SLIDER */
         .slider-box { width: 280px; background: #111; padding: 15px; border-radius: 8px; border: 1px solid #333; margin: 10px 0; text-align: center; }
         input[type=range] { width: 100%; accent-color: var(--p2); cursor: pointer; }
+
+        /* RULES MODAL */
+        .rules-content {
+            background: var(--panel); border: 1px solid #444; border-radius: 12px;
+            padding: 30px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;
+            font-family: 'Rajdhani'; line-height: 1.6;
+        }
+        .rules-content h2 { font-family: 'Orbitron'; color: var(--p1); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 0;}
+        .rules-content strong { color: #fff; }
+        .rules-step { margin-bottom: 15px; padding-left: 15px; border-left: 3px solid var(--p2); }
 
         /* COIN */
         .coin {
@@ -132,18 +145,45 @@
     </style>
 </head>
 <body>
+    
+    <button class="icon-btn" onclick="AudioSys.toggle()" title="Toggle Sound">🔊</button>
 
     <div id="main-menu" class="overlay">
-        <h1 style="font-family:'Orbitron'; font-size:2.5rem; text-align:center; color:#fff; margin-bottom:10px; text-shadow:0 0 20px rgba(255,255,255,0.2);">NEON STRATEGY<br><span style="font-size:1rem; letter-spacing:5px; opacity:0.6;">CRYSTAL EDITION</span></h1>
-        
+        <h1 style="font-family:'Orbitron'; font-size:2.5rem; text-align:center; color:#fff; margin-bottom:10px; text-shadow:0 0 20px rgba(255,255,255,0.2);">NEON STRATEGY<br><span style="font-size:1rem; letter-spacing:5px; opacity:0.6;">CRYSTAL</span></h1>
         <button class="menu-btn" onclick="startGame('PVP')">PLAYER vs PLAYER</button>
-        
         <div class="slider-box">
-            <div style="font-family:'Orbitron'; color:var(--p2); margin-bottom:5px;">CPU DIFFICULTY: <span id="cpu-val" style="color:#fff">5</span></div>
+            <div style="font-family:'Orbitron'; color:var(--p2); margin-bottom:5px;">CPU LEVEL: <span id="cpu-val" style="color:#fff">5</span></div>
             <input type="range" id="cpu-slider" min="1" max="10" value="5" oninput="document.getElementById('cpu-val').innerText=this.value">
         </div>
         <button class="menu-btn cpu" onclick="startGame('PVC')">VS CPU</button>
-        <button class="menu-btn" style="border-color:#555; color:#888; box-shadow:none; padding:10px; font-size:0.9rem;" onclick="startGame('AVA')">WATCH AI DEMO</button>
+        <button class="menu-btn" style="border-color:#888; color:#888; font-size:0.9rem; margin-top:20px;" onclick="toggleRules(true)">HOW TO PLAY</button>
+    </div>
+
+    <div id="rules-overlay" class="overlay" style="display:none; z-index:210;">
+        <div class="rules-content">
+            <h2>TACTICAL BRIEF</h2>
+            <div class="rules-step">
+                <strong>PHASE 1: DEPLOY</strong><br>
+                Take turns placing units on empty nodes. Try to form a <strong>MILL</strong> (3 in a row).
+            </div>
+            <div class="rules-step">
+                <strong>PHASE 2: MANEUVER</strong><br>
+                Once all units are placed, slide them to adjacent connected nodes.
+            </div>
+            <div class="rules-step">
+                <strong>PHASE 3: HYPER JUMP</strong><br>
+                When reduced to 3 units, you can fly to ANY empty node on the board.
+            </div>
+            <div class="rules-step">
+                <strong>THE KILL</strong><br>
+                Forming a <strong>MILL</strong> allows you to destroy one opponent unit. (Protected units in a Mill cannot be targeted unless no others exist).
+            </div>
+            <div class="rules-step">
+                <strong>VICTORY</strong><br>
+                Reduce opponent to 2 units OR block all their moves.
+            </div>
+            <button class="btn full-btn" onclick="toggleRules(false)">ACKNOWLEDGE</button>
+        </div>
     </div>
 
     <div id="coin-overlay" class="overlay" style="display:none;">
@@ -174,18 +214,29 @@
                 <button class="btn btn-hint" onclick="getHint()">💡 HINT</button>
                 <button class="btn" onclick="undoMove()">UNDO</button>
                 <button class="btn full-btn" onclick="resetGame()">RESTART MATCH</button>
-                <button class="btn full-btn" style="border:none; color:#555;" onclick="location.reload()">EXIT TO MENU</button>
+                <button class="btn" style="border:none; color:#777;" onclick="toggleRules(true)">RULES</button>
+                <button class="btn" style="border:none; color:#555;" onclick="location.reload()">EXIT</button>
             </div>
         </div>
     </div>
 
 <script>
-/** NEON STRATEGY CRYSTAL ENGINE (HOTFIX) **/
+/** NEON STRATEGY CRYSTAL ENGINE (COMPLEX AI UPGRADE) **/
+
+const P1_COL = '#00f2ff';
+const P2_COL = '#ff0055';
 
 // --- AUDIO SYSTEM ---
 const AudioSys = {
     ctx: new (window.AudioContext || window.webkitAudioContext)(),
+    muted: false,
+    toggle() {
+        this.muted = !this.muted;
+        document.querySelector('.icon-btn').innerText = this.muted ? '🔇' : '🔊';
+        if(!this.muted && this.ctx.state === 'suspended') this.ctx.resume();
+    },
     tone(f, t, d) {
+        if(this.muted) return;
         if(this.ctx.state === 'suspended') this.ctx.resume();
         const o=this.ctx.createOscillator(), g=this.ctx.createGain();
         o.type=t; o.frequency.setValueAtTime(f, this.ctx.currentTime);
@@ -200,6 +251,20 @@ const AudioSys = {
     win: ()=> AudioSys.tone(600, 'sine', 0.4)
 };
 
+// --- PARTICLES ---
+let particles = [];
+function spawnParticles(x, y, color, count, speed=1) {
+    for(let i=0; i<count; i++) {
+        particles.push({
+            x: x, y: y,
+            vx: (Math.random()-0.5)*0.03*speed,
+            vy: (Math.random()-0.5)*0.03*speed,
+            life: 1.0,
+            color: color
+        });
+    }
+}
+
 // --- DATA ---
 const RAW_PTS=[{x:0.1,y:0.1},{x:0.5,y:0.1},{x:0.9,y:0.1},{x:0.9,y:0.5},{x:0.9,y:0.9},{x:0.5,y:0.9},{x:0.1,y:0.9},{x:0.1,y:0.5},{x:0.25,y:0.25},{x:0.5,y:0.25},{x:0.75,y:0.25},{x:0.75,y:0.5},{x:0.75,y:0.75},{x:0.5,y:0.75},{x:0.25,y:0.75},{x:0.25,y:0.5},{x:0.4,y:0.4},{x:0.5,y:0.4},{x:0.6,y:0.4},{x:0.6,y:0.5},{x:0.6,y:0.6},{x:0.5,y:0.6},{x:0.4,y:0.6},{x:0.4,y:0.5}];
 const ADJ=[[1,7,8],[0,2,9],[1,3,10],[2,4,11],[3,5,12],[4,6,13],[5,7,14],[0,6,15],[0,9,15,16],[1,8,10,17],[2,9,11,18],[3,10,12,19],[4,11,13,20],[5,12,14,21],[6,13,15,22],[7,8,14,23],[8,17,23],[9,16,18],[10,17,19],[11,18,20],[12,19,21],[13,20,22],[14,21,23],[15,16,22]];
@@ -209,7 +274,8 @@ const MILLS=[[0,1,2],[2,3,4],[4,5,6],[6,7,0],[8,9,10],[10,11,12],[12,13,14],[14,
 let mode='PVC', diff=5, turn=1, phase='PLACING';
 let board=[], p1Left=12, p2Left=12, p1Board=0, p2Board=0;
 let selectedId=-1, validMoves=[], historyStack=[], hintMove=null;
-let timerInt=null, seconds=0, particles=[];
+let lastMove = {from:-1, to:-1};
+let timerInt=null, seconds=0;
 
 function startGame(m) {
     mode=m; diff=parseInt(document.getElementById('cpu-slider').value);
@@ -220,16 +286,22 @@ function startGame(m) {
 function resetGame() {
     board=RAW_PTS.map((p,i)=>({id:i, owner:0}));
     turn=1; phase='PLACING'; p1Left=12; p2Left=12; p1Board=0; p2Board=0;
-    selectedId=-1; validMoves=[]; historyStack=[]; particles=[]; hintMove=null; seconds=0;
+    selectedId=-1; validMoves=[]; historyStack=[]; hintMove=null; seconds=0;
+    lastMove = {from:-1, to:-1}; particles=[];
     document.getElementById('coin-overlay').style.display='none';
     clearInterval(timerInt); timerInt=setInterval(()=>{ seconds++; let m=Math.floor(seconds/60), s=seconds%60; document.getElementById('game-timer').innerText=`${m}:${s<10?'0':''}${s}`; },1000);
-    resize(); updateUI();
-    if(mode==='AVA') setTimeout(aiMove, 1000);
+    
+    resize(); 
+    updateUI();
+}
+
+function toggleRules(show) {
+    document.getElementById('rules-overlay').style.display = show ? 'flex' : 'none';
 }
 
 // --- UNDO ---
 function saveState() {
-    historyStack.push(JSON.stringify({board, turn, phase, p1Left, p2Left, p1Board, p2Board}));
+    historyStack.push(JSON.stringify({board, turn, phase, p1Left, p2Left, p1Board, p2Board, lastMove}));
     if(historyStack.length>10) historyStack.shift();
 }
 function undoMove() {
@@ -240,6 +312,7 @@ function undoMove() {
         let state = JSON.parse(historyStack.pop());
         board=state.board; turn=state.turn; phase=state.phase;
         p1Left=state.p1Left; p2Left=state.p2Left; p1Board=state.p1Board; p2Board=state.p2Board;
+        lastMove=state.lastMove;
     }
     selectedId=-1; validMoves=[]; hintMove=null;
     AudioSys.click(); updateUI();
@@ -249,7 +322,6 @@ function undoMove() {
 function isFlying(ply) { return phase==='MOVING' && ((ply===1?p1Board:p2Board)===3) && ((ply===1?p1Left:p2Left)===0); }
 
 function handleInput(idx) {
-    if(mode==='AVA') return;
     if(mode==='PVC' && turn===2) return;
     if(phase==='TRAPPED' || phase==='GAME_OVER') return;
 
@@ -274,7 +346,10 @@ function handleInput(idx) {
     else if(phase==='REMOVING') {
         const enemy = turn===1?2:1;
         if(board[idx].owner===enemy) {
-            if(isProtected(idx, enemy)) { alert("Protected!"); return; }
+            if(isProtected(idx, enemy)) { 
+                AudioSys.tone(100, 'sawtooth', 0.1);
+                return; 
+            }
             saveState(); kill(idx, enemy);
         }
     }
@@ -282,6 +357,12 @@ function handleInput(idx) {
 
 function move(to, ply, type, from) {
     board[to].owner = ply;
+    lastMove = {from: type==='MOVE'?from:-1, to: to};
+    
+    // FX
+    const pt = RAW_PTS[to];
+    spawnParticles(pt.x, pt.y, ply===1?P1_COL:P2_COL, 10);
+
     if(type==='PLACE') { if(ply===1)p1Left--; else p2Left--; if(ply===1)p1Board++; else p2Board++; }
     if(type==='MOVE') { board[from].owner=0; selectedId=-1; validMoves=[]; }
     hintMove = null;
@@ -289,7 +370,6 @@ function move(to, ply, type, from) {
     if(checkMill(to, ply)) {
         phase='REMOVING';
         if(mode!=='PVP' && ply===2) setTimeout(aiKill, 800);
-        else if(mode==='AVA') setTimeout(aiKill, 800);
         else updateUI(true, "TARGET LOCKED", "Destroy Enemy");
     } else {
         endTurn();
@@ -297,13 +377,13 @@ function move(to, ply, type, from) {
 }
 
 function kill(idx, owner) {
-    const pt = RAW_PTS[idx];
-    spawnParticles(pt.x, pt.y, owner===2?P2_COL:P1_COL);
     AudioSys.kill();
+    // FX
+    const pt = RAW_PTS[idx];
+    spawnParticles(pt.x, pt.y, owner===1?P1_COL:P2_COL, 20, 2); 
 
     board[idx].owner = 0;
     if(owner===2) p2Board--; else p1Board--;
-    
     if(p1Left===0 && p2Left===0) {
         if(p2Board<3) { gameOver(1); return; }
         if(p1Board<3) { gameOver(2); return; }
@@ -317,7 +397,6 @@ function endTurn() {
     turn = (turn===1)?2:1;
     validMoves=[]; hintMove=null;
     
-    // DEADLOCK CHECK
     if(phase==='MOVING') {
         let moves = getAllMoves(turn);
         if(moves.length === 0) {
@@ -326,8 +405,7 @@ function endTurn() {
     }
 
     updateUI();
-    if(mode==='AVA') setTimeout(aiMove, 800);
-    else if(mode==='PVC' && turn===2) setTimeout(aiMove, 600);
+    if(mode==='PVC' && turn===2) setTimeout(aiMove, 600);
 }
 
 // --- COIN FLIP ---
@@ -341,13 +419,22 @@ function showCoinFlip(who) {
     let pName = who===1?"P1":"CPU";
     msg.innerHTML = `<span style="color:${who===1?P1_COL:P2_COL}">${pName} TRAPPED!</span><br>Flip to Kill`;
 
-    if((mode==='PVC' && who===2) || mode==='AVA') { coin.onclick=null; setTimeout(flip, 1500); }
-    else { coin.onclick = flip; }
+    if((mode==='PVC' && who===2)) { 
+        coin.onclick=null; 
+        setTimeout(flip, 1500); 
+    }
+    else { 
+        coin.onclick = flip; 
+    }
 }
+
+function startFlip() { flip(); }
 
 function flip() {
     const coin = document.getElementById('coin-visual');
     const msg = document.getElementById('coin-msg');
+    coin.onclick = null; 
+    
     coin.className = 'coin flip'; coin.innerText = "";
     AudioSys.flip();
     
@@ -360,11 +447,12 @@ function flip() {
         
         if(win) {
             msg.innerHTML = "WINNER<br><span style='color:#0f0'>Kill confirmed!</span>";
-            if(turn===1 && mode!=='AVA') AudioSys.win();
+            if(turn===1) AudioSys.win();
             setTimeout(()=>{
                 document.getElementById('coin-overlay').style.display='none';
+                coin.style.borderColor = '#fff'; coin.style.color = '#fff';
                 phase='REMOVING';
-                if((turn===2 && mode==='PVC') || mode==='AVA') aiKill(); 
+                if(turn===2 && mode==='PVC') aiKill(); 
                 else updateUI(true, "TARGET LOCKED", "Shoot to Free Yourself!"); 
             }, 1500);
         } else {
@@ -374,15 +462,24 @@ function flip() {
     }, 1000);
 }
 
-// --- AI & UTILS ---
+// --- ADVANCED AI ---
 function getHint() {
+    // Hint always uses max depth for best advice
+    let d = 3;
     let moves = getAllMoves(turn);
     if(moves.length===0) return;
+    
     let bestScore=-Infinity, bestM=moves[0];
     for(let m of moves) {
-        let prev=board[m.to].owner; board[m.to].owner=turn; if(m.type==='MOVE')board[m.from].owner=0;
-        let score=minimax(1, false, -Infinity, Infinity, turn);
+        let prev=board[m.to].owner; 
+        board[m.to].owner=turn; if(m.type==='MOVE')board[m.from].owner=0;
+        
+        // Bonus for forming mill immediately
+        let bonus = checkMill(m.to, turn) ? 1000 : 0;
+        
+        let score = minimax(d, false, -Infinity, Infinity, turn) + bonus;
         board[m.to].owner=prev; if(m.type==='MOVE')board[m.from].owner=turn;
+        
         if(score>bestScore){bestScore=score; bestM=m;}
     }
     hintMove=bestM; AudioSys.click();
@@ -393,20 +490,59 @@ function aiMove() {
     let moves = getAllMoves(turn);
     if(moves.length===0) return; 
 
+    // Dynamic Difficulty Scaling
+    // 1-3: Random/Shallow (Depth 1)
+    // 4-6: Intermediate (Depth 2)
+    // 7-8: Advanced (Depth 3)
+    // 9-10: Grandmaster (Depth 4 + Aggressive Heuristics)
     let depth = 1;
-    if(diff>=5) depth=2; if(diff>=8) depth=3;
-    if(isFlying(turn)) depth=1;
+    if(diff>=4) depth=2;
+    if(diff>=7) depth=3;
+    if(diff>=9) depth=4;
+
+    if(isFlying(turn)) depth = Math.min(depth, 3); // Reduce depth for flying to prevent lag
 
     let bestScore = -Infinity, bestMove = moves[0];
 
-    if(diff <= 3) { bestMove = moves[Math.floor(Math.random()*moves.length)]; }
+    // Opening Book (for Diff 10): Prefer Intersections
+    if(diff >= 9 && p2Board === 0 && phase === 'PLACING') {
+        const preferred = [8,9,10, 11,12,13, 14,15,16, 17,18,19]; // Inner rings often better
+        let avail = preferred.filter(id => board[id].owner === 0);
+        if(avail.length > 0) {
+            bestMove = {to: avail[Math.floor(Math.random()*avail.length)], type:'PLACE'};
+            move(bestMove.to, turn, bestMove.type, bestMove.from);
+            return;
+        }
+    }
+
+    // Randomness for low levels
+    if(diff <= 2 && Math.random() > 0.5) { 
+        bestMove = moves[Math.floor(Math.random()*moves.length)]; 
+    }
     else {
+        // Optimize: Sort moves to maximize alpha-beta pruning
+        // Try moves that make mills first
+        moves.sort((a,b) => {
+           let millA = checkMill(a.to, turn) ? 1 : 0;
+           let millB = checkMill(b.to, turn) ? 1 : 0;
+           return millB - millA;
+        });
+
         for(let m of moves) {
             let prev = board[m.to].owner;
             board[m.to].owner=turn; if(m.type==='MOVE') board[m.from].owner=0;
-            let score = minimax(depth, false, -Infinity, Infinity, turn);
+            
+            // Immediate Mill Bonus (Critical for short-sightedness)
+            let bonus = 0;
+            if(checkMill(m.to, turn)) bonus = 5000; 
+
+            let score = minimax(depth, false, -Infinity, Infinity, turn) + bonus;
+            
             board[m.to].owner=prev; if(m.type==='MOVE') board[m.from].owner=turn;
-            if(diff<8) score += Math.random()*20;
+            
+            // Random jitter for lower difficulties to feel "human"
+            if(diff < 9) score += Math.random()*20;
+            
             if(score > bestScore) { bestScore=score; bestMove=m; }
         }
     }
@@ -415,18 +551,36 @@ function aiMove() {
 
 function minimax(d, isMax, alpha, beta, ply) {
     if(d===0) return evaluate(ply);
+    
     let currPly = isMax ? ply : (ply===1?2:1);
     let moves = getAllMoves(currPly);
-    if(moves.length===0) return isMax?-5000:5000;
+    
+    // Terminal States
+    if(moves.length===0) return isMax ? -10000 : 10000; // Trapped
 
     let best = isMax?-Infinity:Infinity;
+    
     for(let m of moves) {
         let prev = board[m.to].owner;
-        board[m.to].owner=currPly; if(m.type==='MOVE') board[m.from].owner=0;
+        
+        // Make move
+        board[m.to].owner=currPly; 
+        if(m.type==='MOVE') board[m.from].owner=0;
+        
         let val = minimax(d-1, !isMax, alpha, beta, ply);
-        board[m.to].owner=prev; if(m.type==='MOVE') board[m.from].owner=currPly;
-        if(isMax) { best = Math.max(best, val); alpha = Math.max(alpha, best); }
-        else { best = Math.min(best, val); beta = Math.min(beta, best); }
+        
+        // Undo move
+        board[m.to].owner=prev; 
+        if(m.type==='MOVE') board[m.from].owner=currPly;
+        
+        if(isMax) { 
+            best = Math.max(best, val); 
+            alpha = Math.max(alpha, best); 
+        } else { 
+            best = Math.min(best, val); 
+            beta = Math.min(beta, best); 
+        }
+        
         if(beta <= alpha) break;
     }
     return best;
@@ -436,16 +590,84 @@ function evaluate(ply) {
     let opp = ply===1?2:1;
     let myCount = ply===1?p1Board:p2Board;
     let oppCount = ply===1?p2Board:p1Board;
-    return (myCount-oppCount)*100 + countMills(ply)*50;
+
+    // 1. Material (Base Score)
+    let score = (myCount - oppCount) * 200; 
+
+    // 2. Mills Count (Existing Power)
+    score += countMills(ply) * 100;
+    score -= countMills(opp) * 100;
+
+    // 3. Advanced Heuristics (High Difficulty Only)
+    if(diff >= 5) {
+        // Mobility: Don't get trapped
+        if(phase !== 'PLACING') {
+            let myMoves = getAllMoves(ply).length;
+            let oppMoves = getAllMoves(opp).length;
+            score += (myMoves - oppMoves) * 10;
+        }
+
+        // Potential Mills (2-in-a-row threats)
+        // This makes AI aggressive in setting up and blocking
+        score += countPotentialMills(ply) * 50;
+        score -= countPotentialMills(opp) * 60; // Slightly higher weight on defense
+    }
+    
+    return score;
+}
+
+function countPotentialMills(ply) {
+    let count = 0;
+    for (let m of MILLS) {
+        let p1 = board[m[0]].owner, p2 = board[m[1]].owner, p3 = board[m[2]].owner;
+        // Check pattern: [PLY, PLY, 0] in any order
+        if ((p1===ply && p2===ply && p3===0) ||
+            (p1===ply && p3===ply && p2===0) ||
+            (p2===ply && p3===ply && p1===0)) {
+            count++;
+        }
+    }
+    return count;
 }
 
 function aiKill() {
     let enemy = turn===1?2:1;
     let targets = board.filter(p=>p.owner===enemy && !isProtected(p.id, enemy));
+    
     if(targets.length>0) {
-        targets.sort((a,b) => countAdj(b.id,enemy) - countAdj(a.id,enemy));
+        if(diff >= 7) {
+            // Smart Kill: Target pieces that are part of a potential mill or have high connectivity
+            targets.sort((a,b) => {
+                // Heuristic 1: Does killing this break a potential mill?
+                let valA = createsPotentialMill(a.id, enemy) ? 10 : 0;
+                let valB = createsPotentialMill(b.id, enemy) ? 10 : 0;
+                // Heuristic 2: Connectivity
+                valA += ADJ[a.id].length;
+                valB += ADJ[b.id].length;
+                return valB - valA;
+            });
+        } else {
+            // Basic Kill: Target piece with most neighbors
+            targets.sort((a,b) => countAdj(b.id,enemy) - countAdj(a.id,enemy));
+        }
         kill(targets[0].id, enemy);
-    } else { phase=(p1Left>0||p2Left>0)?'PLACING':'MOVING'; endTurn(); }
+    } else { 
+        // No valid targets (all protected), skip kill phase
+        phase=(p1Left>0||p2Left>0)?'PLACING':'MOVING'; 
+        endTurn(); 
+    }
+}
+
+function createsPotentialMill(id, ply) {
+    // Check if 'id' is part of a 2-piece configuration for 'ply'
+    // Used to decide if we should kill this piece to stop them
+    for(let m of MILLS) {
+        if(m.includes(id)) {
+            let others = m.filter(x => x!==id);
+            if(board[others[0]].owner === ply || board[others[1]].owner === ply) return true;
+        }
+    }
+    return false;
 }
 
 function getAllMoves(ply) {
@@ -468,35 +690,57 @@ function countMills(ply) { let c=0; MILLS.forEach(m=>{if(board[m[0]].owner===ply
 function countAdj(idx, ply) { return ADJ[idx].filter(n=>board[n].owner===ply).length; }
 function gameOver(w) { document.getElementById('coin-overlay').style.display='none'; phase='GAME_OVER'; updateUI(true, (w===1?"P1":"P2")+" WINS!", "Game Over"); AudioSys.win(); clearInterval(timerInt); }
 
-// --- RENDER & INPUT FIX ---
+// --- RENDER & INPUT ---
 const cvs=document.getElementById('gameBoard'), ctx=cvs.getContext('2d');
-let bs=0;
 
 function resize() {
     let rect = cvs.getBoundingClientRect();
-    bs = rect.width;
-    cvs.width = rect.width; cvs.height = rect.height; // Match internal size to CSS
-    draw();
-}
-window.onresize=resize;
-
-function spawnParticles(x, y, color) {
-    // x,y are normalized 0-1
-    for(let i=0; i<15; i++) particles.push({x:x, y:y, vx:(Math.random()-0.5)*0.02, vy:(Math.random()-0.5)*0.02, life:1.0, color:color});
+    if(rect.width > 0) {
+        cvs.width = rect.width;
+        cvs.height = rect.height;
+    }
 }
 
 function draw() {
-    ctx.clearRect(0,0,cvs.width,cvs.height);
+    if(cvs.width === 0) return requestAnimationFrame(draw);
     
-    // Use actual dimensions
     let w = cvs.width; let h = cvs.height;
+    ctx.clearRect(0,0,w,h);
+    
+    // Grid Glow
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = 'rgba(255,255,255,0.1)';
 
-    // Grid
-    ctx.strokeStyle='#333'; ctx.lineWidth=w*0.01; ctx.beginPath();
-    board.forEach(p=>ADJ[p.id].forEach(n=>{if(n>p.id){ctx.moveTo(RAW_PTS[p.id].x*w,RAW_PTS[p.id].y*h); ctx.lineTo(RAW_PTS[n].x*w,RAW_PTS[n].y*h)}}));
+    // Grid Lines
+    ctx.strokeStyle='#333'; ctx.lineWidth=w*0.01; ctx.lineCap = 'round';
+    ctx.beginPath();
+    board.forEach(p=>ADJ[p.id].forEach(n=>{
+        if(n>p.id){
+            ctx.moveTo(RAW_PTS[p.id].x*w, RAW_PTS[p.id].y*h); 
+            ctx.lineTo(RAW_PTS[n].x*w, RAW_PTS[n].y*h)
+        }
+    }));
     ctx.stroke();
+    ctx.shadowBlur = 0;
 
-    // Assist
+    // Last Move Ghost
+    if(lastMove.to !== -1) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.lineWidth = w*0.06;
+        ctx.beginPath();
+        let pTo = RAW_PTS[lastMove.to];
+        ctx.arc(pTo.x*w, pTo.y*h, w*0.04, 0, Math.PI*2);
+        
+        if(lastMove.from !== -1) {
+            let pFrom = RAW_PTS[lastMove.from];
+            ctx.moveTo(pFrom.x*w, pFrom.y*h);
+            ctx.lineTo(pTo.x*w, pTo.y*h);
+            ctx.arc(pFrom.x*w, pFrom.y*h, w*0.02, 0, Math.PI*2);
+        }
+        ctx.stroke();
+    }
+
+    // Assist / Valid Moves
     if(validMoves.length>0) {
         ctx.fillStyle='rgba(0, 255, 100, 0.2)';
         validMoves.forEach(id=>{let pt=RAW_PTS[id]; ctx.beginPath(); ctx.arc(pt.x*w, pt.y*h, w*0.04, 0, Math.PI*2); ctx.fill();});
@@ -510,26 +754,38 @@ function draw() {
     // Units
     board.forEach(p=>{
         let x=RAW_PTS[p.id].x*w, y=RAW_PTS[p.id].y*h;
-        if(p.owner===0) { ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(x,y,w*0.015,0,Math.PI*2); ctx.fill(); }
+        if(p.owner===0) { 
+            ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(x,y,w*0.015,0,Math.PI*2); ctx.fill(); 
+        }
         else {
             let col=p.owner===1?P1_COL:P2_COL;
             ctx.fillStyle=col; ctx.shadowBlur=15; ctx.shadowColor=col;
             ctx.beginPath(); ctx.arc(x,y,w*0.035,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+            
+            // Visual for "Targetable"
             if(phase==='REMOVING' && turn===1 && p.owner===2 && !isProtected(p.id,2)) {
-                ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(x,y,w*0.05,0,Math.PI*2); ctx.stroke();
+                ctx.strokeStyle='#fff'; ctx.lineWidth=2; 
+                ctx.setLineDash([5, 3]);
+                ctx.beginPath(); ctx.arc(x,y,w*0.05,0,Math.PI*2); ctx.stroke();
+                ctx.setLineDash([]);
             }
-            if(p.id===selectedId) { ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(x,y,w*0.055,0,Math.PI*2); ctx.stroke(); }
+            // Visual for Selection
+            if(p.id===selectedId) { 
+                ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(x,y,w*0.055,0,Math.PI*2); ctx.stroke(); 
+            }
         }
     });
 
     // Particles
-    particles.forEach((p,i)=>{
-        p.x+=p.vx; p.y+=p.vy; p.life-=0.05;
-        ctx.globalAlpha=p.life; ctx.fillStyle=p.color;
-        ctx.beginPath(); ctx.arc(p.x*w, p.y*h, 3, 0, Math.PI*2); ctx.fill();
-        if(p.life<=0) particles.splice(i,1);
+    particles.forEach((p, i) => {
+        p.x += p.vx; p.y += p.vy; p.life -= 0.02;
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x*w, p.y*h, w*0.01, 0, Math.PI*2); ctx.fill();
+        if(p.life <= 0) particles.splice(i, 1);
     });
-    ctx.globalAlpha=1;
+    ctx.globalAlpha = 1.0;
+    
     requestAnimationFrame(draw);
 }
 
@@ -542,26 +798,23 @@ function updateUI(alert, t, sub) {
     if(t) { st.innerText=t; ss.innerText=sub; st.className=alert?"status-t alert":"status-t"; }
     else {
         let name = turn===1?"PLAYER 1":(mode==='PVC'?"CPU":(mode==='AVA'?"AI 1":"PLAYER 2"));
-        st.innerText = name+" TURN"; st.className=turn===1?"status-t p1-turn":"status-t p2-turn";
+        st.innerText = name+" TURN"; st.className=turn===1?"status-t p1-txt":"status-t p2-txt";
         ss.innerText = phase==='PLACING'?"Place Unit":"Move Unit";
         if(isFlying(turn)) ss.innerText = "FLYING MODE ENABLED";
     }
     if(phase==='REMOVING' && turn===1 && mode!=='AVA') cvs.style.cursor='crosshair'; else cvs.style.cursor='default';
 }
 
-// Input Fix: Get exact mouse pos relative to canvas
 function getPos(e) {
     const rect = cvs.getBoundingClientRect();
     const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
     const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-    // Normalized 0-1
     return { x: x/rect.width, y: y/rect.height };
 }
 
 function handleStart(e) {
-    if(e.type === 'touchstart') e.preventDefault(); // Stop scroll
+    if(e.type === 'touchstart') e.preventDefault(); 
     const pos = getPos(e);
-    // Find closest point
     for(let i=0; i<24; i++) {
         let p = RAW_PTS[i];
         let dist = Math.sqrt(Math.pow(pos.x - p.x, 2) + Math.pow(pos.y - p.y, 2));
@@ -569,11 +822,15 @@ function handleStart(e) {
     }
 }
 
+// Window Listeners
+window.onresize = resize;
 cvs.addEventListener('mousedown', handleStart);
 cvs.addEventListener('touchstart', handleStart, {passive: false});
 
-// Init on Load
+// Boot
 resize();
+requestAnimationFrame(draw);
+
 </script>
 </body>
 </html>
