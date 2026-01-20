@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neon Strategy: Plasma</title>
+    <title>Neon Strategy: Crystal</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     
     <style>
@@ -12,73 +12,118 @@
             --p1: #00f2ff; --p1-g: rgba(0, 242, 255, 0.6);
             --p2: #ff0055; --p2-g: rgba(255, 0, 85, 0.6);
             --hint: #a200ff; --hint-g: rgba(162, 0, 255, 0.6);
-            --panel: rgba(20, 20, 30, 0.95);
+            --panel: rgba(15, 15, 25, 0.9);
         }
-        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
-        body {
-            background-color: var(--bg); background-image: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #000000 100%);
-            color: white; font-family: 'Rajdhani', sans-serif; margin: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column;
-        }
-
-        /* LAYOUT & SHAKE EFFECT */
-        .main-layout { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; transition: transform 0.1s; }
-        .shake { animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
-        @keyframes shake { 10%, 90% { transform: translate3d(-2px, 0, 0); } 20%, 80% { transform: translate3d(4px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-6px, 0, 0); } 40%, 60% { transform: translate3d(6px, 0, 0); } }
-
-        .game-area { width: 95vw; height: 95vw; max-width: 500px; max-height: 500px; position: relative; }
-        .hud-area { width: 100%; padding: 10px; background: var(--panel); border-top: 2px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1; z-index: 10; }
-
-        @media (min-width: 800px) and (orientation: landscape) {
-            .main-layout { flex-direction: row; gap: 40px; }
-            .game-area { width: 80vh; height: 80vh; max-width: 800px; border: 2px solid #333; border-radius: 12px; background: #000; }
-            .hud-area { width: 320px; height: 80vh; border-top: none; border-left: 2px solid #333; border-radius: 12px; flex-grow: 0; background: rgba(0,0,0,0.6); }
-        }
-
-        /* CANVAS & UI */
-        canvas { width: 100%; height: 100%; border-radius: 8px; display: block; }
-        .status-t { font-family: 'Orbitron'; font-size: 1.6rem; font-weight: bold; margin-bottom: 2px; text-align: center; }
-        .status-s { font-size: 0.9rem; opacity: 0.7; text-align: center; margin-bottom: 10px; }
-        .timer { font-family: 'Orbitron'; font-size: 1.2rem; color: #aaa; margin-bottom: 5px; }
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: none; }
         
-        .p1-turn { color: var(--p1); text-shadow: 0 0 15px var(--p1-g); }
-        .p2-turn { color: var(--p2); text-shadow: 0 0 15px var(--p2-g); }
-        .alert { color: #ffe600; text-shadow: 0 0 20px #ffe600; animation: pulse 0.5s infinite; }
+        body {
+            background-color: var(--bg);
+            background-image: radial-gradient(circle at 50% 50%, #121225 0%, #000000 100%);
+            color: white; font-family: 'Rajdhani', sans-serif;
+            margin: 0; height: 100vh; width: 100vw;
+            overflow: hidden; display: flex; flex-direction: column;
+        }
+
+        /* --- RESPONSIVE LAYOUT ENGINE --- */
+        .main-layout {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            width: 100%; height: 100%; transition: all 0.3s;
+        }
+
+        /* MOBILE (Portrait) */
+        .game-area {
+            width: 95vw; height: 95vw;
+            max-width: 500px; max-height: 500px;
+            position: relative; margin-bottom: 10px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.5);
+            border-radius: 12px;
+        }
+        
+        .hud-area {
+            width: 95%; max-width: 500px;
+            background: var(--panel);
+            border: 1px solid #333; border-radius: 12px;
+            padding: 15px; display: flex; flex-direction: column;
+            gap: 10px; backdrop-filter: blur(10px);
+        }
+
+        /* DESKTOP (Landscape) */
+        @media (min-width: 900px) and (orientation: landscape) {
+            .main-layout { flex-direction: row; gap: 50px; }
+            
+            .game-area {
+                width: 75vh; height: 75vh; /* Scale with height */
+                max-width: 800px; max-height: 800px;
+                border: 3px solid #222;
+                background: #000;
+            }
+            
+            .hud-area {
+                width: 320px; height: 75vh;
+                justify-content: center;
+                box-shadow: 0 0 30px rgba(0,0,0,0.5);
+                border: 2px solid #333;
+            }
+        }
+
+        /* --- CANVAS --- */
+        canvas { width: 100%; height: 100%; display: block; border-radius: 10px; cursor: pointer; }
+        .targeting { cursor: crosshair !important; }
+
+        /* --- UI COMPONENTS --- */
+        .status-box { text-align: center; margin-bottom: 10px; }
+        .status-t { font-family: 'Orbitron'; font-size: 1.8rem; font-weight: bold; margin: 0; }
+        .status-s { font-size: 1rem; opacity: 0.7; letter-spacing: 1px; }
+        .timer { font-family: 'Orbitron'; font-size: 1.2rem; color: #888; text-align: center; }
+
+        .p1-txt { color: var(--p1); text-shadow: 0 0 10px var(--p1-g); }
+        .p2-txt { color: var(--p2); text-shadow: 0 0 10px var(--p2-g); }
+        .alert { color: #ffe600; animation: pulse 0.5s infinite; }
         @keyframes pulse { 50% { opacity: 0.5; } }
 
-        /* BUTTONS */
-        .btn-row { display: flex; gap: 8px; width: 100%; justify-content: center; flex-wrap: wrap; }
-        .btn {
-            background: transparent; border: 1px solid #555; color: #aaa; flex: 1; min-width: 80px;
-            padding: 10px 0; font-family: 'Orbitron'; cursor: pointer; transition: 0.2s; font-size: 0.8rem;
-        }
-        .btn:active { background: rgba(255,255,255,0.2); color: #fff; }
-        .btn-hint { border-color: var(--hint); color: var(--hint); box-shadow: 0 0 10px var(--hint-g); }
-        
-        /* MUTE TOGGLE */
-        .mute-btn { position: absolute; top: 10px; right: 10px; z-index: 200; background: none; border: none; font-size: 1.5rem; cursor: pointer; opacity: 0.7; }
+        .score-row { display: flex; justify-content: space-between; font-family: 'Orbitron'; font-size: 1.1rem; padding: 5px 10px; background: rgba(0,0,0,0.3); border-radius: 5px; }
 
-        /* MENU & OVERLAYS */
+        /* BUTTONS */
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+        .btn {
+            background: rgba(255,255,255,0.05); border: 1px solid #444; color: #ccc;
+            padding: 12px; font-family: 'Orbitron'; font-size: 0.9rem;
+            cursor: pointer; transition: 0.2s; border-radius: 4px;
+        }
+        .btn:hover { background: rgba(255,255,255,0.1); border-color: #fff; color: #fff; }
+        .btn:active { transform: scale(0.95); }
+        .btn-hint { border-color: var(--hint); color: var(--hint); }
+        
+        .full-btn { grid-column: span 2; }
+
+        /* --- MENUS & OVERLAYS --- */
         .overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 100;
+            background: rgba(0,0,0,0.96); z-index: 200;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            backdrop-filter: blur(8px);
         }
         .menu-btn {
-            width: 280px; padding: 12px; margin: 6px;
+            width: 280px; padding: 15px; margin: 8px;
             background: transparent; border: 2px solid var(--p1); color: var(--p1);
-            font-family: 'Orbitron'; font-size: 1rem; cursor: pointer; text-align: center;
-            box-shadow: 0 0 15px var(--p1-g);
+            font-family: 'Orbitron'; font-size: 1.1rem; cursor: pointer;
+            text-align: center; box-shadow: 0 0 15px var(--p1-g); transition: 0.2s;
         }
-        .menu-btn.cpu { border-color: #fff; color: #fff; box-shadow: 0 0 15px rgba(255,255,255,0.3); }
-        
+        .menu-btn:hover { background: var(--p1); color: #000; }
+        .menu-btn.cpu { border-color: #fff; color: #fff; box-shadow: none; }
+        .menu-btn.cpu:hover { background: #fff; color: #000; }
+
+        /* SLIDER */
+        .slider-box { width: 280px; background: #111; padding: 15px; border-radius: 8px; border: 1px solid #333; margin: 10px 0; text-align: center; }
+        input[type=range] { width: 100%; accent-color: var(--p2); cursor: pointer; }
+
         /* COIN */
         .coin {
             width: 140px; height: 140px; border-radius: 50%;
-            border: 6px solid #fff; background: #222;
+            border: 8px solid #fff; background: #1a1a1a;
             display: flex; justify-content: center; align-items: center;
-            font-size: 2rem; font-family: 'Orbitron';
-            box-shadow: 0 0 40px rgba(255,255,255,0.2);
+            font-size: 2.5rem; font-family: 'Orbitron'; font-weight: bold;
+            box-shadow: 0 0 50px rgba(255,255,255,0.3);
             cursor: pointer; margin-bottom: 20px;
         }
         .coin.flip { animation: spin 0.2s infinite linear; }
@@ -88,104 +133,83 @@
 </head>
 <body>
 
-    <button class="mute-btn" onclick="toggleMute()" id="mute-icon">🔊</button>
-
     <div id="main-menu" class="overlay">
-        <h1 style="font-family:'Orbitron'; font-size:2.5rem; text-align:center; color:#fff; margin-bottom:10px;">NEON STRATEGY<br><span style="font-size:1rem; letter-spacing:4px; opacity:0.7;">PLASMA EDITION</span></h1>
+        <h1 style="font-family:'Orbitron'; font-size:2.5rem; text-align:center; color:#fff; margin-bottom:10px; text-shadow:0 0 20px rgba(255,255,255,0.2);">NEON STRATEGY<br><span style="font-size:1rem; letter-spacing:5px; opacity:0.6;">CRYSTAL EDITION</span></h1>
         
         <button class="menu-btn" onclick="startGame('PVP')">PLAYER vs PLAYER</button>
-        <div style="width:280px; margin:10px 0; text-align:center; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
-            <div style="font-family:'Orbitron'; color:var(--p2); margin-bottom:5px;">AI LEVEL: <span id="cpu-val" style="color:#fff">5</span></div>
-            <input type="range" id="cpu-slider" min="1" max="10" value="5" style="width:100%; accent-color:var(--p2);" oninput="document.getElementById('cpu-val').innerText=this.value">
+        
+        <div class="slider-box">
+            <div style="font-family:'Orbitron'; color:var(--p2); margin-bottom:5px;">CPU DIFFICULTY: <span id="cpu-val" style="color:#fff">5</span></div>
+            <input type="range" id="cpu-slider" min="1" max="10" value="5" oninput="document.getElementById('cpu-val').innerText=this.value">
         </div>
         <button class="menu-btn cpu" onclick="startGame('PVC')">VS CPU</button>
-        <button class="menu-btn" style="border-color:#888; color:#888; box-shadow:none;" onclick="startGame('AVA')">WATCH AI vs AI</button>
+        <button class="menu-btn" style="border-color:#555; color:#888; box-shadow:none; padding:10px; font-size:0.9rem;" onclick="startGame('AVA')">WATCH AI DEMO</button>
     </div>
 
     <div id="coin-overlay" class="overlay" style="display:none;">
         <div id="coin-visual" class="coin" onclick="startFlip()">FLIP</div>
-        <div id="coin-msg" style="text-align:center; font-family:'Orbitron'; font-size:1.3rem;">DEADLOCK!<br><span style="font-size:0.9rem; color:#888">Flip to Kill & Make Space</span></div>
+        <div id="coin-msg" style="text-align:center; font-family:'Orbitron'; font-size:1.4rem;">DEADLOCK!<br><span style="font-size:0.9rem; color:#888">Flip to Kill & Make Space</span></div>
     </div>
 
     <div class="main-layout" id="layout">
-        <div class="game-area">
+        
+        <div class="game-area" id="game-container">
             <canvas id="gameBoard"></canvas>
         </div>
+
         <div class="hud-area">
             <div class="timer" id="game-timer">00:00</div>
             
-            <div class="status-t p1-turn" id="status-t">YOUR TURN</div>
-            <div class="status-s" id="status-sub">Place Unit</div>
+            <div class="status-box">
+                <div class="status-t p1-txt" id="status-t">YOUR TURN</div>
+                <div class="status-s" id="status-sub">Place Unit</div>
+            </div>
             
-            <div class="btn-row">
-                <div style="color:var(--p1); font-family:'Orbitron'">P1: <span id="s1">12</span></div>
-                <div style="color:var(--p2); font-family:'Orbitron'">OPP: <span id="s2">12</span></div>
+            <div class="score-row">
+                <div class="p1-txt">P1: <span id="s1">12</span></div>
+                <div class="p2-txt">OPP: <span id="s2">12</span></div>
             </div>
 
-            <div class="btn-row" style="margin-top:10px;">
+            <div class="btn-grid">
                 <button class="btn btn-hint" onclick="getHint()">💡 HINT</button>
                 <button class="btn" onclick="undoMove()">UNDO</button>
-            </div>
-            <div class="btn-row">
-                <button class="btn" style="border-color:var(--p1); color:var(--p1);" onclick="resetGame()">RESET</button>
-                <button class="btn" onclick="location.reload()">MENU</button>
+                <button class="btn full-btn" onclick="resetGame()">RESTART MATCH</button>
+                <button class="btn full-btn" style="border:none; color:#555;" onclick="location.reload()">EXIT TO MENU</button>
             </div>
         </div>
     </div>
 
 <script>
-/** NEON STRATEGY PLASMA ENGINE **/
+/** NEON STRATEGY CRYSTAL ENGINE **/
 
-// --- AUDIO & FX ---
-let muted = false;
+// --- AUDIO SYSTEM ---
 const AudioSys = {
     ctx: new (window.AudioContext || window.webkitAudioContext)(),
-    tone(f, t, d, v=0.1) {
-        if(muted || this.ctx.state==='suspended') { this.ctx.resume(); if(muted)return; }
+    tone(f, t, d) {
+        if(this.ctx.state === 'suspended') this.ctx.resume();
         const o=this.ctx.createOscillator(), g=this.ctx.createGain();
         o.type=t; o.frequency.setValueAtTime(f, this.ctx.currentTime);
-        g.gain.setValueAtTime(v, this.ctx.currentTime);
+        g.gain.setValueAtTime(0.1, this.ctx.currentTime);
         g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime+d);
         o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime+d);
     },
     click: ()=> AudioSys.tone(800, 'sine', 0.1),
     place: ()=> AudioSys.tone(400, 'square', 0.15),
-    kill: ()=> { AudioSys.tone(150, 'sawtooth', 0.3, 0.2); setTimeout(()=>AudioSys.tone(100,'sawtooth',0.3,0.2),100); },
-    win: ()=> { AudioSys.tone(500,'sine',0.2); setTimeout(()=>AudioSys.tone(800,'triangle',0.4),200); },
-    flip: ()=> AudioSys.tone(1200, 'triangle', 0.05)
+    kill: ()=> { AudioSys.tone(150, 'sawtooth', 0.2); setTimeout(()=>AudioSys.tone(100,'sawtooth',0.3),100); },
+    flip: ()=> AudioSys.tone(1200, 'triangle', 0.05),
+    win: ()=> AudioSys.tone(600, 'sine', 0.4)
 };
 
-function toggleMute() {
-    muted = !muted;
-    document.getElementById('mute-icon').innerText = muted ? "🔇" : "🔊";
-}
-
-function screenShake() {
-    const el = document.getElementById('layout');
-    el.classList.remove('shake');
-    void el.offsetWidth; // Trigger reflow
-    el.classList.add('shake');
-}
-
-// --- PARTICLES ---
-let particles = [];
-function spawnParticles(x, y, color) {
-    for(let i=0; i<12; i++) {
-        particles.push({x:x, y:y, vx:(Math.random()-0.5)*12, vy:(Math.random()-0.5)*12, life:1.0, color:color});
-    }
-}
+// --- DATA ---
+const RAW_PTS=[{x:0.1,y:0.1},{x:0.5,y:0.1},{x:0.9,y:0.1},{x:0.9,y:0.5},{x:0.9,y:0.9},{x:0.5,y:0.9},{x:0.1,y:0.9},{x:0.1,y:0.5},{x:0.25,y:0.25},{x:0.5,y:0.25},{x:0.75,y:0.25},{x:0.75,y:0.5},{x:0.75,y:0.75},{x:0.5,y:0.75},{x:0.25,y:0.75},{x:0.25,y:0.5},{x:0.4,y:0.4},{x:0.5,y:0.4},{x:0.6,y:0.4},{x:0.6,y:0.5},{x:0.6,y:0.6},{x:0.5,y:0.6},{x:0.4,y:0.6},{x:0.4,y:0.5}];
+const ADJ=[[1,7,8],[0,2,9],[1,3,10],[2,4,11],[3,5,12],[4,6,13],[5,7,14],[0,6,15],[0,9,15,16],[1,8,10,17],[2,9,11,18],[3,10,12,19],[4,11,13,20],[5,12,14,21],[6,13,15,22],[7,8,14,23],[8,17,23],[9,16,18],[10,17,19],[11,18,20],[12,19,21],[13,20,22],[14,21,23],[15,16,22]];
+const MILLS=[[0,1,2],[2,3,4],[4,5,6],[6,7,0],[8,9,10],[10,11,12],[12,13,14],[14,15,8],[16,17,18],[18,19,20],[20,21,22],[22,23,16],[0,8,16],[2,10,18],[4,12,20],[6,14,22],[1,9,17],[3,11,19],[5,13,21],[7,15,23]];
 
 // --- STATE ---
-const P1_COL='#00f2ff', P2_COL='#ff0055', HINT_COL='#a200ff';
 let mode='PVC', diff=5, turn=1, phase='PLACING';
 let board=[], p1Left=12, p2Left=12, p1Board=0, p2Board=0;
 let selectedId=-1, validMoves=[], historyStack=[], hintMove=null;
-let timerInt=null, seconds=0;
-
-// Geometry
-const rawPoints=[{x:0.1,y:0.1},{x:0.5,y:0.1},{x:0.9,y:0.1},{x:0.9,y:0.5},{x:0.9,y:0.9},{x:0.5,y:0.9},{x:0.1,y:0.9},{x:0.1,y:0.5},{x:0.25,y:0.25},{x:0.5,y:0.25},{x:0.75,y:0.25},{x:0.75,y:0.5},{x:0.75,y:0.75},{x:0.5,y:0.75},{x:0.25,y:0.75},{x:0.25,y:0.5},{x:0.4,y:0.4},{x:0.5,y:0.4},{x:0.6,y:0.4},{x:0.6,y:0.5},{x:0.6,y:0.6},{x:0.5,y:0.6},{x:0.4,y:0.6},{x:0.4,y:0.5}];
-const adj=[[1,7,8],[0,2,9],[1,3,10],[2,4,11],[3,5,12],[4,6,13],[5,7,14],[0,6,15],[0,9,15,16],[1,8,10,17],[2,9,11,18],[3,10,12,19],[4,11,13,20],[5,12,14,21],[6,13,15,22],[7,8,14,23],[8,17,23],[9,16,18],[10,17,19],[11,18,20],[12,19,21],[13,20,22],[14,21,23],[15,16,22]];
-const mills=[[0,1,2],[2,3,4],[4,5,6],[6,7,0],[8,9,10],[10,11,12],[12,13,14],[14,15,8],[16,17,18],[18,19,20],[20,21,22],[22,23,16],[0,8,16],[2,10,18],[4,12,20],[6,14,22],[1,9,17],[3,11,19],[5,13,21],[7,15,23]];
+let timerInt=null, seconds=0, particles=[];
 
 function startGame(m) {
     mode=m; diff=parseInt(document.getElementById('cpu-slider').value);
@@ -194,14 +218,13 @@ function startGame(m) {
 }
 
 function resetGame() {
-    board=rawPoints.map((p,i)=>({id:i, owner:0}));
+    board=RAW_PTS.map((p,i)=>({id:i, owner:0}));
     turn=1; phase='PLACING'; p1Left=12; p2Left=12; p1Board=0; p2Board=0;
-    selectedId=-1; validMoves=[]; historyStack=[]; seconds=0; particles=[]; hintMove=null;
+    selectedId=-1; validMoves=[]; historyStack=[]; particles=[]; hintMove=null; seconds=0;
     document.getElementById('coin-overlay').style.display='none';
     clearInterval(timerInt); timerInt=setInterval(()=>{ seconds++; let m=Math.floor(seconds/60), s=seconds%60; document.getElementById('game-timer').innerText=`${m}:${s<10?'0':''}${s}`; },1000);
     resize(); updateUI();
-    
-    if(mode==='AVA') setTimeout(aiMove, 1000); // Auto start AI vs AI
+    if(mode==='AVA') setTimeout(aiMove, 1000);
 }
 
 // --- UNDO ---
@@ -222,33 +245,11 @@ function undoMove() {
     AudioSys.click(); updateUI();
 }
 
-// --- HINT SYSTEM ---
-function getHint() {
-    if(phase==='GAME_OVER' || phase==='TRAPPED') return;
-    // Calculate best move for CURRENT player using minimax
-    // Limit depth for hint to keep it fast
-    let moves = getAllMoves(turn);
-    if(moves.length===0) return;
-    
-    let bestScore = -Infinity;
-    let bestM = moves[0];
-    
-    for(let m of moves) {
-        let prev = board[m.to].owner;
-        board[m.to].owner=turn; if(m.type==='MOVE') board[m.from].owner=0;
-        let score = minimax(2, false, -Infinity, Infinity, turn); // Depth 2
-        board[m.to].owner=prev; if(m.type==='MOVE') board[m.from].owner=turn;
-        if(score > bestScore) { bestScore=score; bestM=m; }
-    }
-    hintMove = bestM;
-    AudioSys.click();
-}
-
 // --- LOGIC ---
 function isFlying(ply) { return phase==='MOVING' && ((ply===1?p1Board:p2Board)===3) && ((ply===1?p1Left:p2Left)===0); }
 
-function handleClick(idx) {
-    if(mode==='AVA') return; // AI vs AI
+function handleInput(idx) {
+    if(mode==='AVA') return;
     if(mode==='PVC' && turn===2) return;
     if(phase==='TRAPPED' || phase==='GAME_OVER') return;
 
@@ -261,12 +262,12 @@ function handleClick(idx) {
             selectedId=idx; 
             validMoves = [];
             if(isFlying(turn)) board.forEach(p=>{if(p.owner===0)validMoves.push(p.id)});
-            else adj[idx].forEach(n=>{if(board[n].owner===0)validMoves.push(n)});
+            else ADJ[idx].forEach(n=>{if(board[n].owner===0)validMoves.push(n)});
             updateUI(); AudioSys.click();
         }
         else if(selectedId!==-1 && board[idx].owner===0) {
-            if(isFlying(turn) || adj[selectedId].includes(idx)) {
-                saveState(); move(idx, turn, 'MOVE', selectedId); AudioSys.move();
+            if(isFlying(turn) || ADJ[selectedId].includes(idx)) {
+                saveState(); move(idx, turn, 'MOVE', selectedId); AudioSys.click();
             }
         }
     }
@@ -296,9 +297,9 @@ function move(to, ply, type, from) {
 }
 
 function kill(idx, owner) {
-    const pt = rawPoints[idx];
-    spawnParticles(pt.x*cvs.width, pt.y*cvs.height, owner===2?P2_COL:P1_COL);
-    screenShake(); AudioSys.kill();
+    const pt = RAW_PTS[idx];
+    spawnParticles(pt.x, pt.y, owner===2?P2_COL:P1_COL);
+    AudioSys.kill();
 
     board[idx].owner = 0;
     if(owner===2) p2Board--; else p1Board--;
@@ -316,7 +317,7 @@ function endTurn() {
     turn = (turn===1)?2:1;
     validMoves=[]; hintMove=null;
     
-    // DEADLOCK
+    // DEADLOCK CHECK
     if(phase==='MOVING') {
         let moves = getAllMoves(turn);
         if(moves.length === 0) {
@@ -325,8 +326,6 @@ function endTurn() {
     }
 
     updateUI();
-    
-    // AI HANDLING
     if(mode==='AVA') setTimeout(aiMove, 800);
     else if(mode==='PVC' && turn===2) setTimeout(aiMove, 600);
 }
@@ -342,7 +341,6 @@ function showCoinFlip(who) {
     let pName = who===1?"P1":"CPU";
     msg.innerHTML = `<span style="color:${who===1?P1_COL:P2_COL}">${pName} TRAPPED!</span><br>Flip to Kill`;
 
-    // AI or Watch Mode auto-flips
     if((mode==='PVC' && who===2) || mode==='AVA') { coin.onclick=null; setTimeout(flip, 1500); }
     else { coin.onclick = flip; }
 }
@@ -376,34 +374,41 @@ function flip() {
     }, 1000);
 }
 
-// --- AI CORE ---
-function aiMove() {
-    if(phase==='TRAPPED' || phase==='GAME_OVER') return;
+// --- AI & UTILS ---
+function getHint() {
     let moves = getAllMoves(turn);
-    if(moves.length===0) return; // Trap check handles
+    if(moves.length===0) return;
+    let bestScore=-Infinity, bestM=moves[0];
+    for(let m of moves) {
+        let prev=board[m.to].owner; board[m.to].owner=turn; if(m.type==='MOVE')board[m.from].owner=0;
+        let score=minimax(1, false, -Infinity, Infinity, turn);
+        board[m.to].owner=prev; if(m.type==='MOVE')board[m.from].owner=turn;
+        if(score>bestScore){bestScore=score; bestM=m;}
+    }
+    hintMove=bestM; AudioSys.click();
+}
+
+function aiMove() {
+    if(phase==='TRAPPED') return;
+    let moves = getAllMoves(turn);
+    if(moves.length===0) return; 
 
     let depth = 1;
     if(diff>=5) depth=2; if(diff>=8) depth=3;
-    if(isFlying(turn)) depth=1; // Optimize
+    if(isFlying(turn)) depth=1;
 
     let bestScore = -Infinity, bestMove = moves[0];
 
-    // Easy
-    if(diff <= 3) {
-        bestMove = moves[Math.floor(Math.random()*moves.length)];
-        move(bestMove.to, turn, bestMove.type, bestMove.from);
-        return;
-    }
-
-    for(let m of moves) {
-        let prev = board[m.to].owner;
-        board[m.to].owner=turn; if(m.type==='MOVE') board[m.from].owner=0;
-        // Pass current turn to minimax so it maximizes for the current player
-        let score = minimax(depth, false, -Infinity, Infinity, turn);
-        board[m.to].owner=prev; if(m.type==='MOVE') board[m.from].owner=turn;
-        
-        if(diff<8) score += Math.random()*20;
-        if(score > bestScore) { bestScore=score; bestMove=m; }
+    if(diff <= 3) { bestMove = moves[Math.floor(Math.random()*moves.length)]; }
+    else {
+        for(let m of moves) {
+            let prev = board[m.to].owner;
+            board[m.to].owner=turn; if(m.type==='MOVE') board[m.from].owner=0;
+            let score = minimax(depth, false, -Infinity, Infinity, turn);
+            board[m.to].owner=prev; if(m.type==='MOVE') board[m.from].owner=turn;
+            if(diff<8) score += Math.random()*20;
+            if(score > bestScore) { bestScore=score; bestMove=m; }
+        }
     }
     move(bestMove.to, turn, bestMove.type, bestMove.from);
 }
@@ -420,7 +425,6 @@ function minimax(d, isMax, alpha, beta, ply) {
         board[m.to].owner=currPly; if(m.type==='MOVE') board[m.from].owner=0;
         let val = minimax(d-1, !isMax, alpha, beta, ply);
         board[m.to].owner=prev; if(m.type==='MOVE') board[m.from].owner=currPly;
-        
         if(isMax) { best = Math.max(best, val); alpha = Math.max(alpha, best); }
         else { best = Math.min(best, val); beta = Math.min(beta, best); }
         if(beta <= alpha) break;
@@ -436,19 +440,14 @@ function evaluate(ply) {
 }
 
 function aiKill() {
-    // If Watch Mode, turn determines who is killing
     let enemy = turn===1?2:1;
     let targets = board.filter(p=>p.owner===enemy && !isProtected(p.id, enemy));
-    
     if(targets.length>0) {
         targets.sort((a,b) => countAdj(b.id,enemy) - countAdj(a.id,enemy));
         kill(targets[0].id, enemy);
-    } else {
-        phase=(p1Left>0||p2Left>0)?'PLACING':'MOVING'; endTurn();
-    }
+    } else { phase=(p1Left>0||p2Left>0)?'PLACING':'MOVING'; endTurn(); }
 }
 
-// --- UTILS ---
 function getAllMoves(ply) {
     let m=[];
     if(phase==='PLACING') board.forEach(p=>{if(p.owner===0)m.push({to:p.id, type:'PLACE'})});
@@ -457,62 +456,69 @@ function getAllMoves(ply) {
         board.forEach(p=>{
             if(p.owner===ply) {
                 if(flying) board.forEach(e=>{if(e.owner===0)m.push({from:p.id, to:e.id, type:'MOVE'})});
-                else adj[p.id].forEach(n=>{if(board[n].owner===0)m.push({from:p.id, to:n, type:'MOVE'})});
+                else ADJ[p.id].forEach(n=>{if(board[n].owner===0)m.push({from:p.id, to:n, type:'MOVE'})});
             }
         });
     }
     return m;
 }
-function checkMill(idx, ply) { for(let m of mills) if(m.includes(idx) && board[m[0]].owner===ply && board[m[1]].owner===ply && board[m[2]].owner===ply) return true; return false; }
+function checkMill(idx, ply) { for(let m of MILLS) if(m.includes(idx) && board[m[0]].owner===ply && board[m[1]].owner===ply && board[m[2]].owner===ply) return true; return false; }
 function isProtected(idx, ply) { if(!checkMill(idx, ply)) return false; let all=board.filter(p=>p.owner===ply); return !all.every(p=>checkMill(p.id, ply)); }
-function countMills(ply) { let c=0; mills.forEach(m=>{if(board[m[0]].owner===ply && board[m[1]].owner===ply && board[m[2]].owner===ply)c++}); return c; }
-function countAdj(idx, ply) { return adj[idx].filter(n=>board[n].owner===ply).length; }
+function countMills(ply) { let c=0; MILLS.forEach(m=>{if(board[m[0]].owner===ply && board[m[1]].owner===ply && board[m[2]].owner===ply)c++}); return c; }
+function countAdj(idx, ply) { return ADJ[idx].filter(n=>board[n].owner===ply).length; }
 function gameOver(w) { document.getElementById('coin-overlay').style.display='none'; phase='GAME_OVER'; updateUI(true, (w===1?"P1":"P2")+" WINS!", "Game Over"); AudioSys.win(); clearInterval(timerInt); }
 
-// --- RENDER ---
+// --- RENDER & INPUT FIX ---
 const cvs=document.getElementById('gameBoard'), ctx=cvs.getContext('2d');
 let bs=0;
 
 function resize() {
-    bs = cvs.parentElement.getBoundingClientRect().width;
-    cvs.width=bs; cvs.height=bs;
+    let rect = cvs.getBoundingClientRect();
+    bs = rect.width;
+    cvs.width = rect.width; cvs.height = rect.height; // Match internal size to CSS
     draw();
 }
 window.onresize=resize;
 
+function spawnParticles(x, y, color) {
+    // x,y are normalized 0-1
+    for(let i=0; i<15; i++) particles.push({x:x, y:y, vx:(Math.random()-0.5)*0.02, vy:(Math.random()-0.5)*0.02, life:1.0, color:color});
+}
+
 function draw() {
-    ctx.clearRect(0,0,bs,bs);
+    ctx.clearRect(0,0,cvs.width,cvs.height);
     
+    // Use actual dimensions
+    let w = cvs.width; let h = cvs.height;
+
     // Grid
-    ctx.strokeStyle='#333'; ctx.lineWidth=bs*0.01; ctx.beginPath();
-    board.forEach(p=>adj[p.id].forEach(n=>{if(n>p.id){ctx.moveTo(rawPoints[p.id].x*bs,rawPoints[p.id].y*bs); ctx.lineTo(rawPoints[n].x*bs,rawPoints[n].y*bs)}}));
+    ctx.strokeStyle='#333'; ctx.lineWidth=w*0.01; ctx.beginPath();
+    board.forEach(p=>ADJ[p.id].forEach(n=>{if(n>p.id){ctx.moveTo(RAW_PTS[p.id].x*w,RAW_PTS[p.id].y*h); ctx.lineTo(RAW_PTS[n].x*w,RAW_PTS[n].y*h)}}));
     ctx.stroke();
 
-    // Assist / Hint
+    // Assist
     if(validMoves.length>0) {
         ctx.fillStyle='rgba(0, 255, 100, 0.2)';
-        validMoves.forEach(id=>{let pt=rawPoints[id]; ctx.beginPath(); ctx.arc(pt.x*bs, pt.y*bs, bs*0.04, 0, Math.PI*2); ctx.fill();});
+        validMoves.forEach(id=>{let pt=RAW_PTS[id]; ctx.beginPath(); ctx.arc(pt.x*w, pt.y*h, w*0.04, 0, Math.PI*2); ctx.fill();});
     }
     if(hintMove) {
-        let pt=rawPoints[hintMove.to];
-        ctx.strokeStyle=HINT_COL; ctx.lineWidth=3;
-        ctx.shadowColor=HINT_COL; ctx.shadowBlur=15;
-        ctx.beginPath(); ctx.arc(pt.x*bs, pt.y*bs, bs*0.06, 0, Math.PI*2); ctx.stroke();
-        ctx.shadowBlur=0;
+        let pt=RAW_PTS[hintMove.to];
+        ctx.strokeStyle='#a200ff'; ctx.lineWidth=3; ctx.shadowColor='#a200ff'; ctx.shadowBlur=15;
+        ctx.beginPath(); ctx.arc(pt.x*w, pt.y*h, w*0.06, 0, Math.PI*2); ctx.stroke(); ctx.shadowBlur=0;
     }
 
     // Units
     board.forEach(p=>{
-        let x=rawPoints[p.id].x*bs, y=rawPoints[p.id].y*bs;
-        if(p.owner===0) { ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(x,y,bs*0.015,0,Math.PI*2); ctx.fill(); }
+        let x=RAW_PTS[p.id].x*w, y=RAW_PTS[p.id].y*h;
+        if(p.owner===0) { ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(x,y,w*0.015,0,Math.PI*2); ctx.fill(); }
         else {
             let col=p.owner===1?P1_COL:P2_COL;
             ctx.fillStyle=col; ctx.shadowBlur=15; ctx.shadowColor=col;
-            ctx.beginPath(); ctx.arc(x,y,bs*0.035,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+            ctx.beginPath(); ctx.arc(x,y,w*0.035,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
             if(phase==='REMOVING' && turn===1 && p.owner===2 && !isProtected(p.id,2)) {
-                ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(x,y,bs*0.05,0,Math.PI*2); ctx.stroke();
+                ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(x,y,w*0.05,0,Math.PI*2); ctx.stroke();
             }
-            if(p.id===selectedId) { ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(x,y,bs*0.055,0,Math.PI*2); ctx.stroke(); }
+            if(p.id===selectedId) { ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(x,y,w*0.055,0,Math.PI*2); ctx.stroke(); }
         }
     });
 
@@ -520,7 +526,7 @@ function draw() {
     particles.forEach((p,i)=>{
         p.x+=p.vx; p.y+=p.vy; p.life-=0.05;
         ctx.globalAlpha=p.life; ctx.fillStyle=p.color;
-        ctx.beginPath(); ctx.arc(p.x,p.y,3,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(p.x*w, p.y*h, 3, 0, Math.PI*2); ctx.fill();
         if(p.life<=0) particles.splice(i,1);
     });
     ctx.globalAlpha=1;
@@ -543,18 +549,31 @@ function updateUI(alert, t, sub) {
     if(phase==='REMOVING' && turn===1 && mode!=='AVA') cvs.style.cursor='crosshair'; else cvs.style.cursor='default';
 }
 
-cvs.addEventListener('mousedown', e=>input(e.clientX, e.clientY));
-cvs.addEventListener('touchstart', e=>{e.preventDefault(); input(e.touches[0].clientX, e.touches[0].clientY)}, {passive:false});
+// Input Fix: Get exact mouse pos relative to canvas
+function getPos(e) {
+    const rect = cvs.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    // Normalized 0-1
+    return { x: x/rect.width, y: y/rect.height };
+}
 
-function input(cx, cy) {
-    let r=cvs.getBoundingClientRect();
-    let x=cx-r.left, y=cy-r.top;
-    let s=cvs.width/r.width;
+function handleStart(e) {
+    if(e.type === 'touchstart') e.preventDefault(); // Stop scroll
+    const pos = getPos(e);
+    // Find closest point
     for(let i=0; i<24; i++) {
-        let px=rawPoints[i].x*bs, py=rawPoints[i].y*bs;
-        if(Math.hypot((x*s)-px, (y*s)-py) < bs*0.08) { handleClick(i); break; }
+        let p = RAW_PTS[i];
+        let dist = Math.sqrt(Math.pow(pos.x - p.x, 2) + Math.pow(pos.y - p.y, 2));
+        if(dist < 0.08) { handleInput(i); break; }
     }
 }
+
+cvs.addEventListener('mousedown', handleStart);
+cvs.addEventListener('touchstart', handleStart, {passive: false});
+
+// Init on Load
+resize();
 </script>
 </body>
 </html>
