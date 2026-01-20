@@ -130,18 +130,6 @@
         .rules-content strong { color: #fff; }
         .rules-step { margin-bottom: 15px; padding-left: 15px; border-left: 3px solid var(--p2); }
 
-        /* COIN */
-        .coin {
-            width: 140px; height: 140px; border-radius: 50%;
-            border: 8px solid #fff; background: #1a1a1a;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 2.5rem; font-family: 'Orbitron'; font-weight: bold;
-            box-shadow: 0 0 50px rgba(255,255,255,0.3);
-            cursor: pointer; margin-bottom: 20px;
-        }
-        .coin.flip { animation: spin 0.2s infinite linear; }
-        @keyframes spin { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(360deg); } }
-
     </style>
 </head>
 <body>
@@ -176,23 +164,14 @@
             </div>
             <div class="rules-step">
                 <strong>THE KILL</strong><br>
-                Forming a <strong>MILL</strong> allows you to destroy one opponent unit.
-            </div>
-            <div class="rules-step">
-                <strong>FULL BOARD PROTOCOL</strong><br>
-                If the board fills up during deployment, a <strong>COIN FLIP</strong> decides who gets a free kill to start the movement phase.
+                Forming a <strong>MILL</strong> allows you to destroy one opponent unit immediately. (Protected units in a Mill cannot be targeted unless no others exist).
             </div>
             <div class="rules-step">
                 <strong>VICTORY</strong><br>
-                Reduce opponent to 2 units OR block all their moves.
+                Reduce opponent to 2 units OR block all their moves (Trap them).
             </div>
             <button class="btn full-btn" onclick="toggleRules(false)">ACKNOWLEDGE</button>
         </div>
-    </div>
-
-    <div id="coin-overlay" class="overlay" style="display:none;">
-        <div id="coin-visual" class="coin" onclick="startFlip()">FLIP</div>
-        <div id="coin-msg" style="text-align:center; font-family:'Orbitron'; font-size:1.4rem;">DEADLOCK!<br><span style="font-size:0.9rem; color:#888">Flip to Kill & Make Space</span></div>
     </div>
 
     <div class="main-layout" id="layout">
@@ -225,7 +204,7 @@
     </div>
 
 <script>
-/** NEON STRATEGY CRYSTAL ENGINE (FULL BOARD COIN UPDATE) **/
+/** NEON STRATEGY CRYSTAL ENGINE (NO COIN FLIP) **/
 
 const P1_COL = '#00f2ff';
 const P2_COL = '#ff0055';
@@ -280,7 +259,6 @@ let board=[], p1Left=11, p2Left=11, p1Board=0, p2Board=0;
 let selectedId=-1, validMoves=[], historyStack=[], hintMove=null;
 let lastMove = {from:-1, to:-1};
 let timerInt=null, seconds=0;
-let flipContext = null;
 
 function startGame(m) {
     mode=m; diff=parseInt(document.getElementById('cpu-slider').value);
@@ -292,8 +270,7 @@ function resetGame() {
     board=RAW_PTS.map((p,i)=>({id:i, owner:0}));
     turn=1; phase='PLACING'; p1Left=11; p2Left=11; p1Board=0; p2Board=0;
     selectedId=-1; validMoves=[]; historyStack=[]; hintMove=null; seconds=0;
-    lastMove = {from:-1, to:-1}; particles=[]; flipContext=null;
-    document.getElementById('coin-overlay').style.display='none';
+    lastMove = {from:-1, to:-1}; particles=[];
     clearInterval(timerInt); timerInt=setInterval(()=>{ seconds++; let m=Math.floor(seconds/60), s=seconds%60; document.getElementById('game-timer').innerText=`${m}:${s<10?'0':''}${s}`; },1000);
     
     resize(); 
@@ -349,13 +326,16 @@ function handleInput(idx) {
         }
     }
     else if(phase==='REMOVING') {
-        const enemy = turn===1?2:1;
-        if(board[idx].owner===enemy) {
-            if(isProtected(idx, enemy)) { 
+        // Kill phase logic: Turn matches the player who is doing the killing
+        const killer = turn;
+        const victim = killer===1?2:1;
+
+        if(board[idx].owner===victim) {
+            if(isProtected(idx, victim)) { 
                 AudioSys.tone(100, 'sawtooth', 0.1);
                 return; 
             }
-            saveState(); kill(idx, enemy);
+            saveState(); kill(idx, victim);
         }
     }
 }
@@ -377,10 +357,8 @@ function move(to, ply, type, from) {
         if(mode!=='PVP' && ply===2) setTimeout(aiKill, 800);
         else updateUI(true, "TARGET LOCKED", "Destroy Enemy");
     } else {
-        // FULL BOARD COIN FLIP TRIGGER
-        if(phase === 'PLACING' && p1Left === 0 && p2Left === 0) {
-            showCoinFlip(ply, 'FULL_BOARD');
-            return;
+        if (phase === 'PLACING' && p1Left === 0 && p2Left === 0) {
+            phase = 'MOVING';
         }
         endTurn();
     }
@@ -407,10 +385,12 @@ function endTurn() {
     turn = (turn===1)?2:1;
     validMoves=[]; hintMove=null;
     
+    // Check if the NEXT player is trapped
     if(phase==='MOVING') {
         let moves = getAllMoves(turn);
         if(moves.length === 0) {
-            phase='TRAPPED'; showCoinFlip(turn, 'TRAPPED'); return;
+            gameOver(turn===1?2:1); 
+            return;
         }
     }
 
@@ -418,79 +398,8 @@ function endTurn() {
     if(mode==='PVC' && turn===2) setTimeout(aiMove, 600);
 }
 
-// --- COIN FLIP ---
-function showCoinFlip(who, ctx) {
-    flipContext = ctx;
-    const ov = document.getElementById('coin-overlay');
-    const msg = document.getElementById('coin-msg');
-    const coin = document.getElementById('coin-visual');
-    ov.style.display = 'flex';
-    coin.className = 'coin'; coin.innerText = "FLIP";
-    
-    let pName = who===1?"P1":"CPU";
-    let col = who===1?P1_COL:P2_COL;
-
-    if(ctx === 'FULL_BOARD') {
-        msg.innerHTML = `<span style="color:${col}">BOARD FULL!</span><br>Flip to Kill & Clear Space`;
-    } else {
-        msg.innerHTML = `<span style="color:${col}">${pName} TRAPPED!</span><br>Flip to Kill`;
-    }
-
-    if((mode==='PVC' && who===2)) { 
-        coin.onclick=null; 
-        setTimeout(flip, 1500); 
-    }
-    else { 
-        coin.onclick = flip; 
-    }
-}
-
-function startFlip() { flip(); }
-
-function flip() {
-    const coin = document.getElementById('coin-visual');
-    const msg = document.getElementById('coin-msg');
-    coin.onclick = null; 
-    
-    coin.className = 'coin flip'; coin.innerText = "";
-    AudioSys.flip();
-    
-    setTimeout(()=>{
-        let win = Math.random()>0.5;
-        coin.className = 'coin'; 
-        coin.style.borderColor = win?'#0f0':'#f00';
-        coin.style.color = win?'#0f0':'#f00';
-        coin.innerText = win? (turn===1?"P1":"CPU") : "FAIL";
-        
-        if(win) {
-            msg.innerHTML = "WINNER<br><span style='color:#0f0'>Kill confirmed!</span>";
-            if(turn===1) AudioSys.win();
-            setTimeout(()=>{
-                document.getElementById('coin-overlay').style.display='none';
-                coin.style.borderColor = '#fff'; coin.style.color = '#fff';
-                phase='REMOVING';
-                if(turn===2 && mode==='PVC') aiKill(); 
-                else updateUI(true, "TARGET LOCKED", "Shoot to Free Yourself!"); 
-            }, 1500);
-        } else {
-            if(flipContext === 'FULL_BOARD') {
-                msg.innerHTML = "LOSS<br><span style='color:#f00'>No Kill Granted</span>";
-                setTimeout(()=>{ 
-                    document.getElementById('coin-overlay').style.display='none';
-                    phase='MOVING'; 
-                    endTurn(); 
-                }, 1500);
-            } else {
-                msg.innerHTML = "LOSS<br><span style='color:#f00'>Self Destruct...</span>";
-                setTimeout(()=>{ gameOver(turn===1?2:1); }, 1500);
-            }
-        }
-    }, 1000);
-}
-
 // --- ADVANCED AI ---
 function getHint() {
-    // Hint always uses max depth for best advice
     let d = 3;
     let moves = getAllMoves(turn);
     if(moves.length===0) return;
@@ -499,13 +408,9 @@ function getHint() {
     for(let m of moves) {
         let prev=board[m.to].owner; 
         board[m.to].owner=turn; if(m.type==='MOVE')board[m.from].owner=0;
-        
-        // Bonus for forming mill immediately
         let bonus = checkMill(m.to, turn) ? 1000 : 0;
-        
         let score = minimax(d, false, -Infinity, Infinity, turn) + bonus;
         board[m.to].owner=prev; if(m.type==='MOVE')board[m.from].owner=turn;
-        
         if(score>bestScore){bestScore=score; bestM=m;}
     }
     hintMove=bestM; AudioSys.click();
@@ -516,23 +421,16 @@ function aiMove() {
     let moves = getAllMoves(turn);
     if(moves.length===0) return; 
 
-    // Dynamic Difficulty Scaling
-    // 1-3: Random/Shallow (Depth 1)
-    // 4-6: Intermediate (Depth 2)
-    // 7-8: Advanced (Depth 3)
-    // 9-10: Grandmaster (Depth 4 + Aggressive Heuristics)
     let depth = 1;
     if(diff>=4) depth=2;
     if(diff>=7) depth=3;
     if(diff>=9) depth=4;
-
-    if(isFlying(turn)) depth = Math.min(depth, 3); // Reduce depth for flying to prevent lag
+    if(isFlying(turn)) depth = Math.min(depth, 3);
 
     let bestScore = -Infinity, bestMove = moves[0];
 
-    // Opening Book (for Diff 10): Prefer Intersections
     if(diff >= 9 && p2Board === 0 && phase === 'PLACING') {
-        const preferred = [8,9,10, 11,12,13, 14,15,16, 17,18,19]; // Inner rings often better
+        const preferred = [8,9,10, 11,12,13, 14,15,16, 17,18,19]; 
         let avail = preferred.filter(id => board[id].owner === 0);
         if(avail.length > 0) {
             bestMove = {to: avail[Math.floor(Math.random()*avail.length)], type:'PLACE'};
@@ -541,13 +439,10 @@ function aiMove() {
         }
     }
 
-    // Randomness for low levels
     if(diff <= 2 && Math.random() > 0.5) { 
         bestMove = moves[Math.floor(Math.random()*moves.length)]; 
     }
     else {
-        // Optimize: Sort moves to maximize alpha-beta pruning
-        // Try moves that make mills first
         moves.sort((a,b) => {
            let millA = checkMill(a.to, turn) ? 1 : 0;
            let millB = checkMill(b.to, turn) ? 1 : 0;
@@ -557,18 +452,11 @@ function aiMove() {
         for(let m of moves) {
             let prev = board[m.to].owner;
             board[m.to].owner=turn; if(m.type==='MOVE') board[m.from].owner=0;
-            
-            // Immediate Mill Bonus (Critical for short-sightedness)
             let bonus = 0;
             if(checkMill(m.to, turn)) bonus = 5000; 
-
             let score = minimax(depth, false, -Infinity, Infinity, turn) + bonus;
-            
             board[m.to].owner=prev; if(m.type==='MOVE') board[m.from].owner=turn;
-            
-            // Random jitter for lower difficulties to feel "human"
             if(diff < 9) score += Math.random()*20;
-            
             if(score > bestScore) { bestScore=score; bestMove=m; }
         }
     }
@@ -577,36 +465,20 @@ function aiMove() {
 
 function minimax(d, isMax, alpha, beta, ply) {
     if(d===0) return evaluate(ply);
-    
     let currPly = isMax ? ply : (ply===1?2:1);
     let moves = getAllMoves(currPly);
-    
-    // Terminal States
-    if(moves.length===0) return isMax ? -10000 : 10000; // Trapped
+    if(moves.length===0) return isMax ? -10000 : 10000; 
 
     let best = isMax?-Infinity:Infinity;
-    
     for(let m of moves) {
         let prev = board[m.to].owner;
-        
-        // Make move
         board[m.to].owner=currPly; 
         if(m.type==='MOVE') board[m.from].owner=0;
-        
         let val = minimax(d-1, !isMax, alpha, beta, ply);
-        
-        // Undo move
         board[m.to].owner=prev; 
         if(m.type==='MOVE') board[m.from].owner=currPly;
-        
-        if(isMax) { 
-            best = Math.max(best, val); 
-            alpha = Math.max(alpha, best); 
-        } else { 
-            best = Math.min(best, val); 
-            beta = Math.min(beta, best); 
-        }
-        
+        if(isMax) { best = Math.max(best, val); alpha = Math.max(alpha, best); } 
+        else { best = Math.min(best, val); beta = Math.min(beta, best); }
         if(beta <= alpha) break;
     }
     return best;
@@ -616,29 +488,18 @@ function evaluate(ply) {
     let opp = ply===1?2:1;
     let myCount = ply===1?p1Board:p2Board;
     let oppCount = ply===1?p2Board:p1Board;
-
-    // 1. Material (Base Score)
     let score = (myCount - oppCount) * 200; 
-
-    // 2. Mills Count (Existing Power)
     score += countMills(ply) * 100;
     score -= countMills(opp) * 100;
-
-    // 3. Advanced Heuristics (High Difficulty Only)
     if(diff >= 5) {
-        // Mobility: Don't get trapped
         if(phase !== 'PLACING') {
             let myMoves = getAllMoves(ply).length;
             let oppMoves = getAllMoves(opp).length;
             score += (myMoves - oppMoves) * 10;
         }
-
-        // Potential Mills (2-in-a-row threats)
-        // This makes AI aggressive in setting up and blocking
         score += countPotentialMills(ply) * 50;
-        score -= countPotentialMills(opp) * 60; // Slightly higher weight on defense
+        score -= countPotentialMills(opp) * 60; 
     }
-    
     return score;
 }
 
@@ -646,12 +507,7 @@ function countPotentialMills(ply) {
     let count = 0;
     for (let m of MILLS) {
         let p1 = board[m[0]].owner, p2 = board[m[1]].owner, p3 = board[m[2]].owner;
-        // Check pattern: [PLY, PLY, 0] in any order
-        if ((p1===ply && p2===ply && p3===0) ||
-            (p1===ply && p3===ply && p2===0) ||
-            (p2===ply && p3===ply && p1===0)) {
-            count++;
-        }
+        if ((p1===ply && p2===ply && p3===0) || (p1===ply && p3===ply && p2===0) || (p2===ply && p3===ply && p1===0)) count++;
     }
     return count;
 }
@@ -662,31 +518,23 @@ function aiKill() {
     
     if(targets.length>0) {
         if(diff >= 7) {
-            // Smart Kill: Target pieces that are part of a potential mill or have high connectivity
             targets.sort((a,b) => {
-                // Heuristic 1: Does killing this break a potential mill?
                 let valA = createsPotentialMill(a.id, enemy) ? 10 : 0;
                 let valB = createsPotentialMill(b.id, enemy) ? 10 : 0;
-                // Heuristic 2: Connectivity
-                valA += ADJ[a.id].length;
-                valB += ADJ[b.id].length;
+                valA += ADJ[a.id].length; valB += ADJ[b.id].length;
                 return valB - valA;
             });
         } else {
-            // Basic Kill: Target piece with most neighbors
             targets.sort((a,b) => countAdj(b.id,enemy) - countAdj(a.id,enemy));
         }
         kill(targets[0].id, enemy);
     } else { 
-        // No valid targets (all protected), skip kill phase
         phase=(p1Left>0||p2Left>0)?'PLACING':'MOVING'; 
         endTurn(); 
     }
 }
 
 function createsPotentialMill(id, ply) {
-    // Check if 'id' is part of a 2-piece configuration for 'ply'
-    // Used to decide if we should kill this piece to stop them
     for(let m of MILLS) {
         if(m.includes(id)) {
             let others = m.filter(x => x!==id);
@@ -714,7 +562,7 @@ function checkMill(idx, ply) { for(let m of MILLS) if(m.includes(idx) && board[m
 function isProtected(idx, ply) { if(!checkMill(idx, ply)) return false; let all=board.filter(p=>p.owner===ply); return !all.every(p=>checkMill(p.id, ply)); }
 function countMills(ply) { let c=0; MILLS.forEach(m=>{if(board[m[0]].owner===ply && board[m[1]].owner===ply && board[m[2]].owner===ply)c++}); return c; }
 function countAdj(idx, ply) { return ADJ[idx].filter(n=>board[n].owner===ply).length; }
-function gameOver(w) { document.getElementById('coin-overlay').style.display='none'; phase='GAME_OVER'; updateUI(true, (w===1?"P1":"P2")+" WINS!", "Game Over"); AudioSys.win(); clearInterval(timerInt); }
+function gameOver(w) { phase='GAME_OVER'; updateUI(true, (w===1?"P1":"P2")+" WINS!", "Game Over"); AudioSys.win(); clearInterval(timerInt); }
 
 // --- RENDER & INPUT ---
 const cvs=document.getElementById('gameBoard'), ctx=cvs.getContext('2d');
